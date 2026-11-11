@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/hill-climbing/hill-climbing-light.html" },
+    { "source": "/dark", "destination": "/hill-climbing/hill-climbing.html" }
+  ]
+}
