@@ -35,10 +35,10 @@ export function chromeHtml({ active, theme = 'light' }) {
     hill:{title:'Hill climbing',href:theme==='dark'?'/dark':'/',copy:'Dari posisi sekarang, lihat kiri dan kanan, lalu naik ke yang lebih tinggi. Ulangi sampai tidak ada lagi yang lebih tinggi, entah itu puncak tertinggi atau bukan.'},
     cache:{title:'Cache',href:'/cache',copy:'Simpan sekali, ambil lebih cepat. Ikuti perjalanan data saat cache masih kosong dan saat sudah terisi.'},
     cdn:{title:'CDN',href:'/cdn',copy:'Aset yang sama, lebih dekat ke pengguna. Lihat edge CDN mengambil salinan dari origin, lalu melayani request berikutnya.'},
-    city:{title:'City',href:'/city',copy:'Miniatur kota dalam sudut isometrik. Jalan, taman, dan puluhan gedung, dengan mobil yang terus bergerak mengelilingi blok.'}
+    city:{title:'City',href:'/city',copy:''}
   };
   const current=pages[active]??pages.hill;
   const links=Object.entries(pages).map(([id,page])=>`<a href="${page.href}"${active===id?' aria-current="page"':''}>${page.title}</a>`).join('');
-  return `<header class="site-header"><a class="brand" href="/" aria-label="Anatomy Dev beranda">anatomy<span> / dev</span></a><nav class="iso-nav" aria-label="Pilih ilustrasi">${links}</nav><p class="side-foot"><a href="https://github.com/wheresryan22/anatomy" target="_blank" rel="noreferrer">Dibuat dengan Anatomy</a></p></header><section class="page-intro"><h1>${current.title}</h1><p class="intro-copy">${current.copy}</p></section>`;
+  return `<header class="site-header"><a class="brand" href="/" aria-label="Anatomy Dev beranda">anatomy<span> / dev</span></a><nav class="iso-nav" aria-label="Pilih ilustrasi">${links}</nav><p class="side-foot"><a href="https://github.com/wheresryan22/anatomy" target="_blank" rel="noreferrer">Dibuat dengan Anatomy</a></p></header><section class="page-intro"><h1>${current.title}</h1>${current.copy?`<p class="intro-copy">${current.copy}</p>`:''}</section>`;
 }
 export function footerHtml(){return `<footer class="site-footer" aria-hidden="true"></footer>`;}
