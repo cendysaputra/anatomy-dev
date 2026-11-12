@@ -305,10 +305,10 @@ draw(0);
 const CSS = `
 .hc-stage{margin:8px calc(var(--gutter)*-1) 0;padding:0 var(--gutter);outline:none;cursor:crosshair}
 .hc-stage .iso-svg{width:100%;max-height:74vh;margin:0 auto}
-.hc-bar{display:flex;justify-content:space-between;align-items:baseline;gap:24px;padding:14px 0;border-top:1px solid var(--anatomy-faint);border-bottom:1px solid var(--anatomy-faint);font-size:14px}
+.hc-bar{display:flex;justify-content:space-between;align-items:baseline;gap:24px;padding:14px 20px;border-radius:var(--radius);background:var(--surface);font-size:14px}
 .hc-hint{color:var(--anatomy-muted)}
 .hc-readout{font:400 14px var(--mono);color:var(--anatomy-strong);font-variant-numeric:tabular-nums;text-align:right}
-.hc-notes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:40px;padding-top:32px}
+.hc-notes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:40px;padding:32px 20px 0}
 .hc-notes h2{margin:0 0 6px;font:500 15px var(--heading);color:var(--anatomy-strong)}
 .hc-notes p{margin:0;font-size:15px}
 @media(max-width:760px){.hc-stage{overflow:hidden}.hc-stage .iso-svg{width:150%;max-width:none;max-height:none;margin-left:-25%}.hc-bar{flex-direction:column;gap:4px}.hc-readout{text-align:left}.hc-notes{grid-template-columns:1fr;gap:22px}}
