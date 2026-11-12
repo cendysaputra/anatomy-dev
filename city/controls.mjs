@@ -39,6 +39,13 @@ export function setupCamera(stage){
     camera.pan(event.key==='ArrowLeft'?-step:event.key==='ArrowRight'?step:0,event.key==='ArrowUp'?-step:event.key==='ArrowDown'?step:0);apply(true);
     event.preventDefault();
   });
-  function resize(){const box=stage.getBoundingClientRect();if(!box.width||!box.height)return;camera.resize(box.width/box.height);apply();}
+  function resize(){
+    const box=stage.getBoundingClientRect();if(!box.width||!box.height)return;
+    const aspect=box.width/box.height;camera.resize(aspect);
+    // Tall screens: zoom in until the map covers the whole stage, with no empty bands.
+    const cover=camera.baseWidth/Math.min(world.width,world.height*aspect);
+    if(camera.zoom<cover*1.15){camera.maxZoom=Math.max(camera.maxZoom,cover*1.15);camera.zoomAt(cover*1.15);}
+    apply();
+  }
   new ResizeObserver(resize).observe(stage);resize();
 }
