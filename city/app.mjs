@@ -1,13 +1,16 @@
 import {setupCamera} from './controls.mjs';
 import {snow} from './snow.mjs';
+import {cityMap} from './map.mjs';
 import {onFrame,pauseOffscreen} from './frames.mjs';
 import {iso,extrude,roundedPlan,depthOf} from '../kit/iso-kit.mjs';
 import {cityTraffic,sample} from './routes.mjs';
-const P=JSON.parse(document.querySelector('#city-config').textContent).projection;
-const stage=document.querySelector('.city-stage'),scene=document.querySelector('#city-scene');
+// Scene data is built ahead of time (see build.mjs): the projection, and for every object its
+// depth, bounds and the outlines that can hide a car.
+const scene=await (await fetch('/city/props.json')).json();
+const P=scene.projection;
+const stage=document.querySelector('.city-stage'),layer=stage.querySelector('.city-map');
 const traffic=cityTraffic();
-// Cars are drawn on their own canvas above the map. The city SVG is static, so the browser
-// rasterises it once; with the cars inside it, every frame re-rasterised the whole visible city.
+// Cars are drawn on their own canvas above the map, so the map itself never has to be redrawn.
 const canvas=document.createElement('canvas');canvas.className='city-cars';canvas.setAttribute('aria-hidden','true');
 stage.append(canvas);
 const ctx=canvas.getContext('2d');
@@ -22,7 +25,7 @@ const liveries=[...new Set(traffic.cars.map(c=>c.color))].reduce((all,color)=>{
 const cars=traffic.cars.map(data=>({data,livery:liveries[data.color],visible:false,depth:0,x:0,y:0,shape:null}));
 // Buildings, trees and props never move and stay in their built far-to-near order. Their outlines
 // are kept so a car can be hidden behind every object that stands nearer to the camera.
-const props=[...scene.children].map(node=>{const b=node.getBBox();return {node,depth:+node.dataset.depth,x0:b.x,y0:b.y,x1:b.x+b.width,y1:b.y+b.height,shape:null};});
+const props=scene.props.map(data=>({data,depth:data.z,x0:data.b[0],y0:data.b[1],x1:data.b[2],y1:data.b[3],shape:null}));
 // Convex hull of a point set with unit edge normals, for exact overlap tests.
 function hullOf(points){
   const sorted=[...points].sort((a,b)=>a[0]-b[0]||a[1]-b[1]),cross=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]);
@@ -44,21 +47,21 @@ function touching(a,ox,oy,b){
   }
   return true;
 }
-// An object's silhouette pieces, read from its SVG paths the first time a car comes near it.
+// An object's silhouette pieces, turned into paths the first time a car comes near it.
 function shapeOf(prop){
   if(prop.shape)return prop.shape;
   const cuts=[];
-  for(const node of prop.node.querySelectorAll('.iso-fill,.cone-side,.hatcone-side,.xmas-star,.snow-cut,.street-light>.iso-line')){
-    const d=node.getAttribute('d'),points=[];let x=0,y=0;
+  for(const [d,how] of prop.data.c){
+    const points=[];let x=0,y=0;
     // Built paths use absolute M/L and relative l segments.
     for(const [,op,a,b] of d.matchAll(/([MLl])(-?\d*\.?\d+) ?(-?\d*\.?\d+)/g)){if(op==='l'){x+=+a;y+=+b;}else{x=+a;y=+b;}points.push([x,y]);}
-    cuts.push({shape:new Path2D(d),solid:!node.classList.contains('iso-line'),edged:!node.classList.contains('snow-cut'),hull:hullOf(points)});
+    cuts.push({shape:new Path2D(d),solid:!!(how&1),edged:!!(how&2),hull:hullOf(points)});
   }
-  for(const c of prop.node.querySelectorAll('.bauble circle')){
-    const cx=+c.getAttribute('cx'),cy=+c.getAttribute('cy'),r=+c.getAttribute('r'),shape=new Path2D();
-    shape.arc(cx,cy,r,0,Math.PI*2);cuts.push({shape,solid:true,edged:false,hull:hullOf([[cx-r,cy-r],[cx+r,cy-r],[cx+r,cy+r],[cx-r,cy+r]])});
+  for(const [cx,cy,r] of prop.data.o??[]){
+    const shape=new Path2D();shape.arc(cx,cy,r,0,Math.PI*2);
+    cuts.push({shape,solid:true,edged:false,hull:hullOf([[cx-r,cy-r],[cx+r,cy-r],[cx+r,cy+r],[cx-r,cy+r]])});
   }
-  return prop.shape={cuts,weight:prop.node.querySelector('.tree')?.4:.55};
+  return prop.shape={cuts,weight:prop.data.w};
 }
 function nearerFrom(depth){let lo=0,hi=props.length;while(lo<hi){const mid=(lo+hi)>>1;if(props[mid].depth<=depth)lo=mid+1;else hi=mid;}return lo;}
 const bodyRing=roundedPlan({x:-5.5,y:-2.5,w:11,d:5,r:1.2},2);
@@ -100,13 +103,11 @@ function shapeAt(angle){
 // Christmas-tree lights twinkle on this canvas rather than in the SVG, so the map never repaints.
 // Each decorated tree becomes a group of glows placed over its baubles and star.
 const GLOWS=['#ff4a4a','#ffd84a','#fff3d0','#ffe27a','#ffe9a8','#ff3b2f'];
-const garlands=props.filter(p=>p.node.querySelector('.bauble')).map((prop,index)=>{
-  const bulbs=[];
-  [0,1,2].forEach(tone=>{for(const c of prop.node.querySelectorAll('.bauble-'+tone+' circle'))bulbs.push({x:+c.getAttribute('cx'),y:+c.getAttribute('cy'),tone,size:8,phase:bulbs.length*2.4+index,rate:1.6+(bulbs.length%5)*.45});});
-  const star=prop.node.querySelector('.xmas-star').getBBox();
-  bulbs.push({x:star.x+star.width/2,y:star.y+star.height/2,tone:3,size:24,phase:index,rate:1.1});
+const garlands=scene.garlands.map((tree,index)=>{
+  const bulbs=tree.bulbs.map(([x,y,tone],i)=>({x,y,tone,size:8,phase:i*2.4+index,rate:1.6+(i%5)*.45}));
+  bulbs.push({x:tree.star[0],y:tree.star[1],tone:3,size:24,phase:index,rate:1.1});
   const xs=bulbs.map(b=>b.x),ys=bulbs.map(b=>b.y),x0=Math.min(...xs)-5,y0=Math.min(...ys)-9,x1=Math.max(...xs)+5,y1=Math.max(...ys)+5;
-  return {depth:prop.depth,bulbs,x:0,y:0,shape:{hull:hullOf([[x0,y0],[x1,y0],[x1,y1],[x0,y1]]),x0,y0,x1,y1}};
+  return {depth:tree.z,bulbs,x:0,y:0,shape:{hull:hullOf([[x0,y0],[x1,y0],[x1,y1],[x0,y1]]),x0,y0,x1,y1}};
 });
 // One soft dot per colour, redrawn only when the zoom changes.
 let glowScale=0,glowSprites=[];
@@ -215,7 +216,7 @@ function draw(){
 // Called by the camera on every move and resize, in the same task that moves the map.
 function onView(box,nextScale){
   const zoomed=nextScale!==scale;
-  view=box;scale=nextScale;dpr=Math.min(1.5,devicePixelRatio||1);
+  view=box;scale=nextScale;map.show(box,scale);dpr=Math.min(1.5,devicePixelRatio||1);
   const cssW=stage.clientWidth+MARGIN*2,cssH=stage.clientHeight+MARGIN*2,w=Math.round(cssW*dpr),h=Math.round(cssH*dpr);
   const resized=canvas.width!==w||canvas.height!==h;
   if(resized){canvas.width=w;canvas.height=h;canvas.style.width=cssW+'px';canvas.style.height=cssH+'px';}
@@ -225,7 +226,8 @@ function onView(box,nextScale){
   // Redraw shortly even when the frame loop is paused (reduced motion), so the slide settles.
   if(!settle)settle=setTimeout(draw,40);
 }
-setupCamera(stage,onView);
+const map=cityMap(layer,scene.world);
+setupCamera(stage,layer,scene.world,onView);
 pauseOffscreen(stage);
 // Cars creep along slowly, so 30 frames a second is plenty and halves the work of this canvas.
 onFrame(dt=>{clock+=Math.min(dt,.25);draw();},30);

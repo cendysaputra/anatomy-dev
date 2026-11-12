@@ -95,3 +95,7 @@ body:has(.city-stage) .site-header.is-min{width:max-content;height:auto;flex-dir
 /* A pine tier is outlined by the stroke of its own side. */
 .cone-side{stroke:#17301d;stroke-width:.45;stroke-linejoin:round}
 .tree .trunk{fill:#2a2019}
+/* The map is a layer of bitmap tiles (see map.mjs) moved by the camera with a transform. */
+.city-map{position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform;user-select:none}
+.city-map canvas{position:absolute;display:block}
+.ice-sheet{fill:#123650}

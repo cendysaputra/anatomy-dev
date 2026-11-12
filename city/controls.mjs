@@ -1,19 +1,19 @@
 import {CityCamera} from './camera.mjs';
 // Fixed close-up camera: drag or use the arrow keys to move around the city. No zoom.
 // onView(box,scale) runs synchronously with every camera move, so overlays stay locked to the map.
-export function setupCamera(stage,onView){
-  const svg=stage.querySelector('svg'),vb=svg.viewBox.baseVal,world={width:vb.width,height:vb.height};
+// layer is the element holding the drawn map; world is the map's size in its own units.
+export function setupCamera(stage,layer,world,onView){
   const camera=new CityCamera(world.width,world.height);
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
   let displayed=camera.box,frame=0,animationStart=0,animationFrom=displayed;
-  // The SVG keeps its full-world viewBox and is drawn once at the current scale; moving the camera
-  // only changes a GPU transform, so panning never re-rasterises the city.
+  // The map layer is drawn once at the current scale; moving the camera only changes a GPU
+  // transform, so panning never redraws the city.
   let scale=0;
   const write=box=>{
-    displayed=box;svg.cityView=box;
+    displayed=box;
     const next=stage.clientWidth/box.width;
-    if(Math.abs(next-scale)>1e-6){scale=next;svg.style.width=world.width*scale+'px';svg.style.height=world.height*scale+'px';}
-    svg.style.transform=`translate3d(${(-box.x*scale).toFixed(2)}px,${(-box.y*scale).toFixed(2)}px,0)`;
+    if(Math.abs(next-scale)>1e-6){scale=next;layer.style.width=world.width*scale+'px';layer.style.height=world.height*scale+'px';}
+    layer.style.transform=`translate3d(${(-box.x*scale).toFixed(2)}px,${(-box.y*scale).toFixed(2)}px,0)`;
     onView?.(box,scale);
   };
   function tween(now){
@@ -26,7 +26,7 @@ export function setupCamera(stage,onView){
     else{cancelAnimationFrame(frame);frame=0;write(camera.box);}
   }
   const pan=(dx,dy)=>camera.pan(dx,dy);
-  const toWorld=(x,y)=>new DOMPoint(x,y).matrixTransform(svg.getScreenCTM().inverse());
+  const toWorld=(x,y)=>{const at=stage.getBoundingClientRect();return {x:displayed.x+(x-at.left)/scale,y:displayed.y+(y-at.top)/scale};};
   let drag=null;
   stage.addEventListener('pointerdown',event=>{
     if(drag||(event.pointerType==='mouse'&&event.button!==0))return;
