@@ -23,9 +23,7 @@ export function setupCamera(stage){
     if(smooth&&!reduced.matches){animationStart=performance.now();animationFrom=displayed;if(!frame)frame=requestAnimationFrame(tween);}
     else{cancelAnimationFrame(frame);frame=0;write(camera.box);}
   }
-  // Keep the view over the city: the world box has empty corners around the isometric diamond,
-  // so panning is limited to a band around the centre where the city fills the screen.
-  const pan=(dx,dy)=>{camera.pan(dx,dy);const s=camera.size,cx=(world.width-s.width)/2,cy=(world.height-s.height)/2,mx=Math.max(0,world.width*.5-s.width*.5-world.width*.2),my=Math.max(0,world.height*.5-s.height*.5-world.height*.2);camera.x=Math.min(cx+mx,Math.max(cx-mx,camera.x));camera.y=Math.min(cy+my,Math.max(cy-my,camera.y));};
+  const pan=(dx,dy)=>camera.pan(dx,dy);
   const toWorld=(x,y)=>new DOMPoint(x,y).matrixTransform(svg.getScreenCTM().inverse());
   let drag=null;
   stage.addEventListener('pointerdown',event=>{
