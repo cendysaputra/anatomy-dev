@@ -73,7 +73,6 @@ function plate() {
     out.push(S(k.cylinder(x, y, 5.4, -PLATE_H - FOOT_H + 1.6, FOOT_H - 1.6, P, 28), { tone: "mid" }));
   }
   out.push(S(k.slabOf(PLATE, -PLATE_H, PLATE_H, P, 8, 1.6), { tone: "mid" }));
-  out.push(L(k.planOutline(k.insetPlan(PLATE, 5), 0, P), { tone: "lo" }));
   const screws = k.corners(PLATE, 10);
   out.push(D(screws.map(([x, y]) => at([x, y, 0])), { size: 0.5 }));
   return out.join("");
@@ -94,8 +93,6 @@ function bed() {
   const out = [];
   out.push(`<path class="iso-halo" d="${k.haloOf(k.insetPlan(BED, 2), 0, 0.1, P)}" style="filter:blur(3px)"/>`);
   out.push(S(k.slabOf(BED, 0, BED_TOP, P, 4, 0.6), { tone: "mid" }));
-  out.push(L(k.lineOnTop([BED.x, BED.y + 2.4], [BED.x + BED.w, BED.y + 2.4], BED_TOP, P), { tone: "faint" }));
-  out.push(L(k.lineOnTop([BED.x, BED.y + BED.d - 2.4], [BED.x + BED.w, BED.y + BED.d - 2.4], BED_TOP, P), { tone: "faint" }));
   return out.join("");
 }
 
