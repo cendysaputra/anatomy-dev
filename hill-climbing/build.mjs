@@ -300,7 +300,7 @@ draw(0);
 `;
 
 const CSS = `
-.hc-stage{margin:8px calc(var(--gutter)*-1) 0;padding:0 var(--gutter);outline:none;cursor:crosshair}
+.hc-stage{margin:8px 0 0;outline:none;cursor:crosshair}
 .hc-stage .iso-svg{width:100%;max-height:74vh;margin:0 auto}
 .hc-bar{display:flex;justify-content:space-between;align-items:baseline;gap:24px;padding:14px 20px;border-radius:var(--radius);background:var(--surface);font-size:14px}
 .hc-hint{color:var(--anatomy-muted)}
