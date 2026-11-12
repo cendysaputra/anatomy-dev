@@ -8,6 +8,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as k from "../kit/iso-kit.mjs";
 import { kitScript } from "../scripts/inline-kit.mjs";
+import { chromeCss, chromeHtml } from "../scripts/chrome.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const theme = process.argv.includes("--light") ? "light" : "dark";
@@ -338,7 +339,7 @@ stage.addEventListener("keydown", (event) => {
 draw(0);
 `;
 
-const body = k.plateHtml({
+const body = `<style>${chromeCss()}</style>${chromeHtml({ active: "hill", theme })}${k.plateHtml({
   fig: "Fig 1",
   title: "Hill climbing",
   hint: "Arahkan kursor: pilih titik awal",
@@ -351,8 +352,8 @@ const body = k.plateHtml({
   caption:
     `Hill climbing: dari state sekarang, bandingkan tetangga kiri dan kanan, pindah ke yang lebih tinggi, ulangi sampai tak ada tetangga yang lebih tinggi. Mulai di x 0–9 dan pendaki berhenti di puncak lokal x=5 (f = 46); mulai di x 10–20 dan ia mencapai puncak global x=16 (f = 70). Algoritmanya cepat dan hemat memori, tapi tak pernah turun, jadi bisa terjebak.`,
   body: `<div class="iso-stage" tabindex="0" role="slider" aria-label="Hill climbing: panah kiri/kanan memilih titik awal, Enter mengulang" aria-valuemin="0" aria-valuemax="${N - 1}" aria-valuenow="${START}">${svg}</div>`,
-});
+})}`;
 
 const out = theme === "light" ? "hill-climbing-light.html" : "hill-climbing.html";
-writeFileSync(join(HERE, out), k.pageHtml({ title: "Hill climbing", theme, body, script: kitScript() + live }));
+writeFileSync(join(HERE, out), k.pageHtml({ title: "Hill Climbing Algorithm", theme, width: 1200, body, script: kitScript() + live }));
 console.log("wrote", out, "· path from", START, "=", PATH0.join("→"));
