@@ -52,11 +52,11 @@ function shapeOf(prop){
     const d=node.getAttribute('d'),points=[];let x=0,y=0;
     // Built paths use absolute M/L and relative l segments.
     for(const [,op,a,b] of d.matchAll(/([MLl])(-?\d*\.?\d+) ?(-?\d*\.?\d+)/g)){if(op==='l'){x+=+a;y+=+b;}else{x=+a;y=+b;}points.push([x,y]);}
-    cuts.push({shape:new Path2D(d),solid:!node.classList.contains('iso-line'),hull:hullOf(points)});
+    cuts.push({shape:new Path2D(d),solid:!node.classList.contains('iso-line'),edged:!node.classList.contains('snow-cut'),hull:hullOf(points)});
   }
   for(const c of prop.node.querySelectorAll('.bauble circle')){
     const cx=+c.getAttribute('cx'),cy=+c.getAttribute('cy'),r=+c.getAttribute('r'),shape=new Path2D();
-    shape.arc(cx,cy,r,0,Math.PI*2);cuts.push({shape,solid:true,hull:hullOf([[cx-r,cy-r],[cx+r,cy-r],[cx+r,cy+r],[cx-r,cy+r]])});
+    shape.arc(cx,cy,r,0,Math.PI*2);cuts.push({shape,solid:true,edged:false,hull:hullOf([[cx-r,cy-r],[cx+r,cy-r],[cx+r,cy+r],[cx-r,cy+r]])});
   }
   return prop.shape={cuts,weight:prop.node.querySelector('.tree')?.4:.55};
 }
@@ -92,9 +92,10 @@ function shapeAt(angle){
     [path(projected(bonnetSnow,2.47))+path(projected(bootSnow,2.47)),'snowShade',1],[path(projected(bonnetSnow,2.72))+path(projected(bootSnow,2.68)),'snow',1],
     [path(projected(roofSnow,3.9)),'snowShade',1],[path(projected(roofSnow,4.3)),'snow',1]
   ].map(([d,colour,alpha])=>({shape:new Path2D(d),colour,alpha}));
-  const hull=hullOf([...projected(shadowRing,.12),...projected(bodyRing,.65),...projected(bodyRing,2.45),...projected(cabinRing,3.85),...projected(roofSnow,4.3),...projected(BEAM,.14),...projected([[11,-6],[11,6],[-8.6,-5],[-8.6,5]],2.48),...projected([[5.3,0]],8.5)].map(([x,y])=>[x-ORIGIN[0],y-ORIGIN[1]]));
+  const hull=hullOf([...projected(shadowRing,.12),...projected(bodyRing,.65),...projected(bodyRing,2.45),...projected(cabinRing,3.85),...projected(roofSnow,4.3),...projected(BEAM,.14)].map(([x,y])=>[x-ORIGIN[0],y-ORIGIN[1]]));
+  const room=[...projected([[11,-6],[11,6],[-8.6,-5],[-8.6,5]],2.48),...projected([[5.3,0]],8.5)].map(([x,y])=>[x-ORIGIN[0],y-ORIGIN[1]]),xs=[...hull.xs,...room.map(p=>p[0])],ys=[...hull.ys,...room.map(p=>p[1])];
   const lamps=[...projected([[5.3,-1.65],[5.3,1.65]],2.48).map(([x,y])=>({x,y,tone:4,size:5.5})),...projected([[-5.3,-1.65],[-5.3,1.65]],2.48).map(([x,y])=>({x,y,tone:5,size:3.2}))];
-  return shapes[key]={key,parts,lamps,hull,x0:Math.min(...hull.xs)-SLACK,y0:Math.min(...hull.ys)-SLACK,x1:Math.max(...hull.xs)+SLACK,y1:Math.max(...hull.ys)+SLACK};
+  return shapes[key]={key,parts,lamps,hull,x0:Math.min(...xs)-SLACK,y0:Math.min(...ys)-SLACK,x1:Math.max(...xs)+SLACK,y1:Math.max(...ys)+SLACK};
 }
 // Christmas-tree lights twinkle on this canvas rather than in the SVG, so the map never repaints.
 // Each decorated tree becomes a group of glows placed over its baubles and star.
@@ -104,7 +105,7 @@ const garlands=props.filter(p=>p.node.querySelector('.bauble')).map((prop,index)
   [0,1,2].forEach(tone=>{for(const c of prop.node.querySelectorAll('.bauble-'+tone+' circle'))bulbs.push({x:+c.getAttribute('cx'),y:+c.getAttribute('cy'),tone,size:8,phase:bulbs.length*2.4+index,rate:1.6+(bulbs.length%5)*.45});});
   const star=prop.node.querySelector('.xmas-star').getBBox();
   bulbs.push({x:star.x+star.width/2,y:star.y+star.height/2,tone:3,size:24,phase:index,rate:1.1});
-  const xs=bulbs.map(b=>b.x),ys=bulbs.map(b=>b.y),x0=Math.min(...xs)-24,y0=Math.min(...ys)-24,x1=Math.max(...xs)+24,y1=Math.max(...ys)+24;
+  const xs=bulbs.map(b=>b.x),ys=bulbs.map(b=>b.y),x0=Math.min(...xs)-5,y0=Math.min(...ys)-9,x1=Math.max(...xs)+5,y1=Math.max(...ys)+5;
   return {depth:prop.depth,bulbs,x:0,y:0,shape:{hull:hullOf([[x0,y0],[x1,y0],[x1,y1],[x0,y1]]),x0,y0,x1,y1}};
 });
 // One soft dot per colour, redrawn only when the zoom changes.
@@ -197,7 +198,7 @@ function draw(){
         if(!cutting){cutting=true;ctx.setTransform(k,0,0,k,left,top);ctx.globalAlpha=1;ctx.globalCompositeOperation='destination-out';ctx.lineCap='round';}
         ctx.lineWidth=weight/scale;
         if(cut.solid)ctx.fill(cut.shape);
-        ctx.stroke(cut.shape);
+        if(cut.edged)ctx.stroke(cut.shape);
       }
     }
     if(cutting)ctx.globalCompositeOperation='source-over';
