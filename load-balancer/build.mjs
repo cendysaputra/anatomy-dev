@@ -45,7 +45,7 @@ const body=`<style>${chromeCss()}</style><link rel="stylesheet" href="/load-bala
  <div><h2>Batas model</h2><p>Satu request per koneksi, tanpa antrean dan tanpa retry. Server yang dimatikan langsung dilewati; request yang sedang berjalan di sana gagal.</p></div>
 </div>
 </section>${footerHtml()}`;
-let html=k.pageHtml({title:'Load Balancing — Anatomy Dev',theme,width:1280,body});
+let html=k.pageHtml({title:'Load Balancing',theme,width:1280,body});
 html=html.replace('<html lang="en">','<html lang="id">').replace('</head>','<meta name="description" content="Pelajari cara kerja load balancer melalui simulasi isometrik interaktif. Bandingkan round robin, least connections, dan weighted routing."></head>').replace('</body>','<script type="module" src="/load-balancer/app.mjs"></script></body>');
 writeFileSync(new URL(theme==='dark'?'dark.html':'index.html',import.meta.url),html);
 console.log('Built load balancer · '+theme);

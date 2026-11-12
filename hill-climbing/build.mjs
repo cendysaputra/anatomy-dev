@@ -322,5 +322,5 @@ const body = `<style>${chromeCss()}${CSS}</style>${chromeHtml({ active: "hill", 
 </section>${footerHtml()}`;
 
 const out = theme === "light" ? "hill-climbing-light.html" : "hill-climbing.html";
-writeFileSync(join(HERE, out), k.pageHtml({ title: "Hill Climbing Algorithm", theme, width: 1200, body, script: 'import { iso, depthOf, translateAlong, pathOf } from "/kit/iso-kit.mjs";\n' + live }));
+writeFileSync(join(HERE, out), k.pageHtml({ title: "Hill Climbing", theme, width: 1200, body, script: 'import { iso, depthOf, translateAlong, pathOf } from "/kit/iso-kit.mjs";\n' + live }));
 console.log("wrote", out, "· path from", START, "=", PATH0.join("→"));
