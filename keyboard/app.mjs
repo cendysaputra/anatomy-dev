@@ -9,6 +9,9 @@ const projection=JSON.parse(stage.dataset.projection);
 const groups=[...stage.querySelectorAll('[data-layer]')];
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 const svg=stage.querySelector('.iso-svg');
+const views=JSON.parse(stage.dataset.views);
+const ease=t=>t*t*(3-2*t);
+function frameView(p){const t=ease(Math.max(0,Math.min(1,p/.7)));svg.setAttribute('viewBox',views.rest.map((v,i)=>(v+(views.apart[i]-v)*t).toFixed(2)).join(' '));}
 const annotations=labels.map(label=>({...label,node:stage.querySelector(`[data-label="${label.id}"]`),leader:stage.querySelector(`[data-leader="${label.id}"]`)}));
 let layout=null;
 function measureLabels(){
@@ -18,7 +21,8 @@ function measureLabels(){
 }
 function drawLabels(){
  if(!layout)return;
- const {matrix:m}=layout;
+ const rect=stage.getBoundingClientRect(),cm=svg.getScreenCTM();if(!cm)return;
+ const m={a:cm.a,b:cm.b,c:cm.c,d:cm.d,e:cm.e-rect.left,f:cm.f-rect.top};
  const items=layout.items.map(l=>{
   const delta=displacement(l.layer,current);
   const [x,y]=iso(l.at.map((v,i)=>v+delta[i]),projection);
@@ -49,6 +53,7 @@ function syncTyping(){
 function draw(){
  current=reduced.matches?target:current+(target-current)*.14;
  if(Math.abs(target-current)<.0001)current=target;
+ frameView(current);
  for(const el of groups)el.setAttribute('transform',translateAlong(projection,displacement(el.dataset.layer,current)));
  section.dataset.progress=current.toFixed(4);
  drawLabels();

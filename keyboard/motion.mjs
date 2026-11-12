@@ -1,14 +1,18 @@
 export const clamp=v=>Math.max(0,Math.min(1,v));
 const smooth=v=>v*v*(3-2*v);
+// Exploded view: a clean stack. The bottom case stays put; every layer above it rises by one
+// step and slides one step left, so the layers fan out in order from bottom to top.
+const STEP=[-22,0,34];
+const at=n=>STEP.map(v=>v*n);
 export const layers={
- caps:{offset:[0,0,96],start:0,end:.7},
- switches:{offset:[0,0,58],start:.1,end:.8},
- plate:{offset:[-12,0,27],start:.18,end:.85},
- pcb:{offset:[20,0,-4],start:.23,end:.88},
- foam:{offset:[-20,-8,-30],start:.3,end:.95},
- tray:{offset:[0,8,-58],start:.2,end:1},
- bezel:{offset:[-72,12,23],start:.12,end:.9},
- screws:{offset:[-22,12,54],start:0,end:.5},
- cable:{offset:[0,-28,6],start:.25,end:.8},
+ tray:{offset:at(0),start:.3,end:.9},
+ cable:{offset:at(0),start:.3,end:.9},
+ foam:{offset:at(1),start:.25,end:.85},
+ pcb:{offset:at(2),start:.2,end:.8},
+ plate:{offset:at(3),start:.15,end:.75},
+ switches:{offset:at(4),start:.1,end:.7},
+ bezel:{offset:at(5),start:.05,end:.65},
+ screws:{offset:at(5),start:.05,end:.65},
+ caps:{offset:at(6.3),start:0,end:.6},
 };
 export function displacement(name,progress){const{offset,start,end}=layers[name];const t=smooth(clamp((progress-start)/(end-start)));return offset.map(v=>v*t)}
