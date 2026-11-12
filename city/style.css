@@ -33,3 +33,7 @@ body:has(.city-stage) .site-header{user-select:none}
 /* Christmas traffic: a few red and green cars among the greys. */
 .car-2{--car-top:#c8372d;--car-side:#9e2a22;--car-roof:#e2564b}.car-4{--car-top:#3f7a4a;--car-side:#2c5a35;--car-roof:#5d9466}
 .city-snow{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+/* Winter: settled snow on roofs, trees, kerbs and cars. The car canvas reads these two tokens too. */
+.city-stage{--snow:#fff;--snow-shade:#c5d5e6}
+.snow-top{fill:var(--snow);stroke:var(--snow-shade);stroke-width:.4;stroke-linejoin:round}.snow-side{fill:var(--snow-shade)}
+.snow-ground{stroke-width:.3}.snowcone-side{fill:#f8fbfe}.snowcone-shade{fill:#cddbea}

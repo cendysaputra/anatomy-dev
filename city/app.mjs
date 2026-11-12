@@ -13,7 +13,7 @@ stage.append(canvas);
 const ctx=canvas.getContext('2d');
 // Paint comes from the same CSS custom properties the SVG cars used.
 const token=(node,name)=>getComputedStyle(node).getPropertyValue(name).trim();
-const paint={halo:token(stage,'--anatomy-halo'),glass:token(stage,'--anatomy-text'),lights:token(stage,'--anatomy-top'),tail:token(stage,'--anatomy-mid')};
+const paint={halo:token(stage,'--anatomy-halo'),glass:token(stage,'--anatomy-text'),lights:token(stage,'--anatomy-top'),tail:token(stage,'--anatomy-mid'),snow:token(stage,'--snow'),snowShade:token(stage,'--snow-shade')};
 const liveries=[...new Set(traffic.cars.map(c=>c.color))].reduce((all,color)=>{
   const probe=document.createElement('i');probe.className='city-car car-'+color;stage.append(probe);
   all[color]={top:token(probe,'--car-top'),side:token(probe,'--car-side'),roof:token(probe,'--car-roof')};
@@ -48,7 +48,7 @@ function touching(a,ox,oy,b){
 function shapeOf(prop){
   if(prop.shape)return prop.shape;
   const cuts=[];
-  for(const node of prop.node.querySelectorAll('.iso-fill,.cone-side,.xmas-star,.street-light>.iso-line')){
+  for(const node of prop.node.querySelectorAll('.iso-fill,.cone-side,.xmas-star,.snow-cut,.street-light>.iso-line')){
     const d=node.getAttribute('d'),points=[];let x=0,y=0;
     // Built paths use absolute M/L and relative l segments.
     for(const [,op,a,b] of d.matchAll(/([MLl])(-?\d*\.?\d+) ?(-?\d*\.?\d+)/g)){if(op==='l'){x+=+a;y+=+b;}else{x=+a;y=+b;}points.push([x,y]);}
@@ -64,6 +64,8 @@ function nearerFrom(depth){let lo=0,hi=props.length;while(lo<hi){const mid=(lo+h
 const bodyRing=roundedPlan({x:-5.5,y:-2.5,w:11,d:5,r:1.2},2);
 const cabinRing=roundedPlan({x:-3.2,y:-1.9,w:5.8,d:3.8,r:.6},2);
 const shadowRing=roundedPlan({x:-5.1,y:-2,w:11.4,d:5.3,r:1.4},2);
+// Snow carried on the roof, bonnet and boot.
+const roofSnow=roundedPlan({x:-1.75,y:-1.6,w:2.7,d:3.2,r:1},2),bonnetSnow=roundedPlan({x:2.8,y:-1.7,w:1.7,d:3.4,r:.7},2),bootSnow=roundedPlan({x:-4.6,y:-1.6,w:1.2,d:3.2,r:.5},2);
 const path=points=>points.map(([x,y],i)=>(i?'L':'M')+x.toFixed(2)+' '+y.toFixed(2)).join('')+'Z';
 // The projection is affine, so a car's outline depends only on its heading; moving it is a plain
 // translation. Shapes are built once per half-degree of heading at the world origin and shared by
@@ -83,9 +85,11 @@ function shapeAt(angle){
     [cabin.fill,'side',1],[cabin.top,'roof',1],
     [quads([[[1.1,-1.7],[2.2,-1.7],[2.2,1.7],[1.1,1.7]],[[-2.8,-1.65],[-1.9,-1.65],[-1.9,1.65],[-2.8,1.65]]],3.9),'glass',1],
     [quads([[[4.7,-2.1],[5.25,-2.1],[5.25,-1.2],[4.7,-1.2]],[[4.7,1.2],[5.25,1.2],[5.25,2.1],[4.7,2.1]]],2.48),'lights',1],
-    [quads([[[-5.25,-2.1],[-4.8,-2.1],[-4.8,-1.2],[-5.25,-1.2]],[[-5.25,1.2],[-4.8,1.2],[-4.8,2.1],[-5.25,2.1]]],2.48),'tail',1]
+    [quads([[[-5.25,-2.1],[-4.8,-2.1],[-4.8,-1.2],[-5.25,-1.2]],[[-5.25,1.2],[-4.8,1.2],[-4.8,2.1],[-5.25,2.1]]],2.48),'tail',1],
+    [path(projected(bonnetSnow,2.47))+path(projected(bootSnow,2.47)),'snowShade',1],[path(projected(bonnetSnow,2.72))+path(projected(bootSnow,2.68)),'snow',1],
+    [path(projected(roofSnow,3.9)),'snowShade',1],[path(projected(roofSnow,4.3)),'snow',1]
   ].map(([d,colour,alpha])=>({shape:new Path2D(d),colour,alpha}));
-  const hull=hullOf([...projected(shadowRing,.12),...projected(bodyRing,.65),...projected(bodyRing,2.45),...projected(cabinRing,3.85)].map(([x,y])=>[x-ORIGIN[0],y-ORIGIN[1]]));
+  const hull=hullOf([...projected(shadowRing,.12),...projected(bodyRing,.65),...projected(bodyRing,2.45),...projected(cabinRing,3.85),...projected(roofSnow,4.3)].map(([x,y])=>[x-ORIGIN[0],y-ORIGIN[1]]));
   return shapes[key]={parts,hull,x0:Math.min(...hull.xs)-SLACK,y0:Math.min(...hull.ys)-SLACK,x1:Math.max(...hull.xs)+SLACK,y1:Math.max(...hull.ys)+SLACK};
 }
 let view=null,scale=1,dpr=1,clock=0;

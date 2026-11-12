@@ -13,17 +13,31 @@ const top=(p,z=0)=>k.onTop(k.roundedPlan(p,3),z,P,true);
 const line=(points,style={})=>k.lineSvg(k.pathOf(points.map(at)),style);
 const objects=[];let buildings=0,trees=0;
 function add(x,y,body,kind='detail'){objects.push({depth:k.depthOf([x,y,0],P),body,kind});}
-function tree(x,y,size=1){trees++;const trunk=S(k.cylinder(x,y,.85*size,1,4*size,P,8));const canopy=S(k.cylinder(x,y,4.3*size,4*size,4*size,P,12))+S(k.cylinder(x,y,3.5*size,8*size,2.2*size,P,12));add(x,y,`<path class="tree-shadow" d="${top(plan(x-3+3*size,y-3+3*size,7*size,7*size,3))}"/><g class="tree">${trunk}${canopy}</g>`,'tree');}
+function tree(x,y,size=1){trees++;const trunk=S(k.cylinder(x,y,.85*size,1,4*size,P,8));const canopy=S(k.cylinder(x,y,4.3*size,4*size,4*size,P,12))+S(k.cylinder(x,y,3.5*size,8*size,2.2*size,P,12));const cap=`<path class="snow-top" d="${flat(heap(x,y,3*size,3*size,trees),10.2*size+.05)}"/>`;add(x,y,`<path class="tree-shadow" d="${top(plan(x-3+3*size,y-3+3*size,7*size,7*size,3))}"/><g class="tree">${trunk}${canopy}</g>${cap}`,'tree');}
 // A cone in the iso camera: its silhouette is the hull of the apex and the base circle;
 // the half facing away from the light gets a darker tone.
 function hull(pts){pts=[...pts].sort((a,b)=>a[0]-b[0]||a[1]-b[1]);const cross=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]);const lo=[],up=[];for(const p of pts){while(lo.length>1&&cross(lo.at(-2),lo.at(-1),p)<=0)lo.pop();lo.push(p);}for(const p of pts.reverse()){while(up.length>1&&cross(up.at(-2),up.at(-1),p)<=0)up.pop();up.push(p);}return lo.slice(0,-1).concat(up.slice(0,-1));}
 const poly=pts=>'M'+pts.map(([a,b])=>a.toFixed(1)+' '+b.toFixed(1)).join('L')+'Z';
-function cone(x,y,r,z0,h){
+// Winter: settled snow is built into the static SVG, so it costs nothing while the page runs.
+const seeded=seed=>{let s=(Math.imul(seed+11,2654435761))>>>0;return()=>((s=(Math.imul(s,1664525)+1013904223)>>>0)/4294967296);};
+const flat=(points,z)=>poly(points.map(([x,y])=>at([x,y,z])));
+// A plan outline pulled inward by uneven amounts, so a snow sheet gets a soft irregular edge.
+function drifted(p,seed,wobble=1.3){
+  const next=seeded(seed),cx=p.x+p.w/2,cy=p.y+p.d/2;
+  return k.roundedPlan({...p,r:Math.min(p.r,p.w/2,p.d/2)},4).map(([x,y])=>{const t=next()*wobble,dx=cx-x,dy=cy-y,l=Math.hypot(dx,dy)||1;return [x+dx/l*t,y+dy/l*t];});
+}
+// An uneven round heap, as plan points.
+function heap(cx,cy,rx,ry,seed,scale=1){const next=seeded(seed);return Array.from({length:12},(_,i)=>{const a=i/12*Math.PI*2,f=(.72+next()*.28)*scale;return [cx+Math.cos(a)*rx*f,cy+Math.sin(a)*ry*f];});}
+// A snow sheet with visible thickness: its lower outline in shade, its top in white.
+const snowSheet=(p,z,seed,depth=.7)=>{const ring=drifted(p,seed);return `<path class="snow-side snow-cut" d="${flat(ring,z)}"/><path class="snow-top snow-cut" d="${flat(ring,z+depth)}"/>`;};
+let snowSides='',snowTops='';
+function snowHeap(cx,cy,rx,ry,seed,height=.6){snowSides+=flat(heap(cx,cy,rx,ry,seed),.25);snowTops+=flat(heap(cx,cy,rx,ry,seed,height?.8:1),.25+height);}
+function cone(x,y,r,z0,h,kind='cone'){
  const ring=Array.from({length:28},(_,i)=>{const a=i/28*Math.PI*2;return [x+Math.cos(a)*r,y+Math.sin(a)*r];});
  const apex=at([x,y,z0+h]),base=ring.map(([px,py])=>at([px,py,z0]));
  const c=k.depthOf([x,y,0],P),front=ring.map(([px,py],i)=>k.depthOf([px,py,0],P)>c?base[i]:null).filter(Boolean);
  const shade=front.filter(p=>p[0]>=apex[0]).sort((a,b)=>a[0]-b[0]);
- return `<path class="cone-side" d="${poly(hull([apex,...base]))}"/>${shade.length>1?`<path class="cone-shade" d="${poly([apex,...shade])}"/>`:''}<path class="cone-edge" d="${poly(hull([apex,...base]))}"/>`;
+ return `<path class="${kind}-side" d="${poly(hull([apex,...base]))}"/>${shade.length>1?`<path class="${kind}-shade" d="${poly([apex,...shade])}"/>`:''}${kind==='cone'?`<path class="cone-edge" d="${poly(hull([apex,...base]))}"/>`:''}`;
 }
 // A pine for the Christmas parks; the big one at the centre carries baubles and a star.
 function pine(x,y,size=1,big=false){
@@ -33,6 +47,7 @@ function pine(x,y,size=1,big=false){
  const baubles=[];
  for(let t=0;t<tiers;t++){
    body+=cone(x,y,r,z,h);
+   {const f=t===tiers-1?.5:.68;body+=cone(x,y,r*f,z+h*(1-f),h*f,'snowcone');}
    if(big)for(let a=0;a<12;a++){const ang=a/12*Math.PI*2+t*.5,f=.55,px=x+Math.cos(ang)*r*f,py=y+Math.sin(ang)*r*f;if(k.depthOf([px,py,0],P)>k.depthOf([x,y,0],P)+r*f*.3)baubles.push([px,py,z+h*(1-f)*.95,(a+t)%3]);}
    z+=h*.42;r*=.74;h*=.8;
  }
@@ -50,14 +65,14 @@ function building(x,y,w,d,h,seed){
  let out=`<path class="building-shadow" d="${top(plan(x+4,y+5,w+2,d+2,1.3),.2)}"/>`;
  out+=slab(shell,1,setback?5:h);
  const tower=setback?plan(x+2.5,y+2.5,w-5,d-5,1):shell;
- if(setback)out+=slab(tower,6,h-5);
+ if(setback)out+=snowSheet(k.insetPlan({...shell,r:3},.6),6,seed*3+1,.5)+slab(tower,6,h-5);
  let windows='';
  for(let z=6;z<h-2;z+=5){
    for(let q=3;q<tower.w-2;q+=5)windows+=k.pathOf([at([tower.x+q,tower.y+tower.d,z]),at([Math.min(tower.x+q+2.6,tower.x+tower.w-2),tower.y+tower.d,z])]);
    for(let q=3;q<tower.d-2;q+=5)windows+=k.pathOf([at([tower.x+tower.w,tower.y+q,z]),at([tower.x+tower.w,Math.min(tower.y+q+2.6,tower.y+tower.d-2),z])]);
  }
  out+=`<path class="building-windows" d="${windows}"/>`;
- out+=k.lineSvg(k.planOutline(k.insetPlan(tower,1.2),h+1,P,3),{tone:'lo'});
+ out+=snowSheet(k.insetPlan({...tower,r:3.5},.7),h+1,seed*3+2);
  if(seed%3===0){out+=`<g class="roof-machine">${slab(plan(tower.x+3,tower.y+3,5,7,1),h+1,2.2)}</g>`;out+=line([[tower.x+4,tower.y+5,h+3.2],[tower.x+7,tower.y+5,h+3.2]],{tone:'lo'});}
  else if(seed%3===1){out+=`<g class="solar"><path d="${top(plan(tower.x+3,tower.y+3,8,10,.2),h+1.2)}"/>${line([[tower.x+7,tower.y+3,h+1.3],[tower.x+7,tower.y+13,h+1.3]],{tone:'faint'})}</g>`;}
  else out+=`<g class="roof-machine">${S(k.cylinder(tower.x+tower.w/2,tower.y+tower.d/2,3,h+1,3,P,14))}</g>`;
@@ -85,6 +100,7 @@ for(let row=0;row<BLOCKS;row++)for(let col=0;col<BLOCKS;col++){
  ground.push(`<g class="sidewalk">${slab(plan(x-2,y-2,74,74,4),.2,.8)}</g>`);
  if(PARKS.has(row+','+col)){
    ground.push(`<path class="park-ground" d="${top(plan(x+2,y+2,66,66,3),1.05)}"/><path class="park-path" d="${top(plan(cx-3,y+2,6,66,0),1.1)+top(plan(x+2,cy-3,66,6,0),1.1)}"/>`);
+   for(const [dx,dy,i] of [[-18,-18,0],[18,-17,1],[-17,18,2],[18,18,3]])snowHeap(cx+dx,cy+dy,11,10,seed*17+i,0);
    pine(cx,cy,1.5,true);
    for(const dx of [-22,22])for(const dy of [-22,22])pine(cx+dx,cy+dy,1.2);
    for(const [dx,dy] of [[-20,2],[20,-2]])add(cx+dx,cy+dy,slab(plan(cx+dx-4,cy+dy-1,8,2,0),1,2));
@@ -97,11 +113,18 @@ for(let row=0;row<BLOCKS;row++)for(let col=0;col<BLOCKS;col++){
    }
    tree(x+3,y+35,.7);tree(x+66,y+35,.7);
  }
+ // Ploughed snow banked against the kerb on each side of the block, clear of the crossings.
+ {const next=seeded(seed+500),bx=x-2,by=y-2;
+  for(let side=0;side<4;side++)for(let n=0;n<3;n++){
+    const t=12+n*17+next()*9,length=3+next()*4.5,off=side%2?74+1.5:-1.5;
+    if(side<2)snowHeap(bx+t,by+off,length,1.6,seed*40+side*4+n);else snowHeap(bx+off,by+t,1.6,length,seed*40+side*4+n);
+  }}
  // A slim street light on every block, set back from the carriageway.
  const lx=x+35,ly=y-1;add(lx,ly,`<g class="street-light">${line([[lx,ly,1],[lx,ly,8],[lx,ly-3,8]],{tone:'mid'})}${S(k.cylinder(lx,ly-3,1.3,8,.65,P,10))}</g>`);
 }
 // An outer planted verge gives the road network a clean model edge.
 for(const p of GRID.slice(0,-1).map(g=>g+38)){tree(-HALF+6,p,.8);tree(HALF-6,p,.8);tree(p,-HALF+6,.8);tree(p,HALF-6,.8);}
+ground.push(`<path class="snow-side" d="${snowSides}"/><path class="snow-top snow-ground" d="${snowTops}"/>`);
 objects.sort((a,b)=>a.depth-b.depth);
 const traffic=cityTraffic();
 const fig=k.figureSvg({width:W,height:H,label:`Miniatur kota isometrik berisi ${buildings} gedung, taman, jalan dua arah, dan ${traffic.cars.length} mobil yang bergerak otomatis dalam lintasan looping.`,body:[...ground,`<g id="city-scene">${objects.map((o,i)=>`<g data-city-object="${i}" data-depth="${o.depth.toFixed(6)}" data-kind="${o.kind}">${o.body}</g>`).join('')}</g>`]});
