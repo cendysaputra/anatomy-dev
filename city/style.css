@@ -99,3 +99,13 @@ body:has(.city-stage) .site-header.is-min{width:max-content;height:auto;flex-dir
 .city-map{position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform;user-select:none}
 .city-map canvas{position:absolute;display:block}
 .ice-sheet{fill:#123650}
+/* Christmas music sits with the menu control. music.mjs switches the label and which icon shows. */
+.music-toggle{appearance:none;border:0;padding:0;width:32px;height:32px;border-radius:9px;display:grid;place-items:center;flex:none;order:2;background:transparent;color:var(--anatomy-text);cursor:pointer}
+.music-toggle:hover{background:rgba(255,255,255,.09);color:var(--anatomy-strong)}
+.music-toggle svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.music-toggle .icon-on{display:none}
+.music-toggle[aria-pressed="true"]{color:#ffe27a}
+.music-toggle[aria-pressed="true"] .icon-off{display:none}
+.music-toggle[aria-pressed="true"] .icon-on{display:block}
+.site-header:not(.is-min) .music-toggle{position:absolute;top:15px;right:52px}
+@media(max-width:900px){.site-header:not(.is-min) .music-toggle{top:6px;right:46px}}
