@@ -26,5 +26,5 @@
 .lb-notes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:40px;padding-top:32px}
 .lb-notes h2{margin:0 0 6px;font:500 15px var(--heading);color:var(--anatomy-strong)}
 .lb-notes p{margin:0;font-size:15px}
-@media(max-width:760px){.lb-stage{overflow:hidden}.lb-stage .iso-svg{width:136%;max-width:none;max-height:none;margin-left:-25%}.machine-label{font-size:26px}.machine-sub{font-size:21px}.lb-bar{gap:12px 20px}.lb-readout{flex-direction:column;gap:4px}.counts{white-space:normal}.lb-notes{grid-template-columns:1fr;gap:22px}.seg{padding:0 9px;font-size:13px}}
+@media(max-width:760px){.lb-stage{overflow:hidden}.lb-stage .iso-svg{width:136%;max-width:none;max-height:none;margin-left:-30%}.machine-label{font-size:26px}.machine-sub{font-size:21px}.lb-bar{gap:12px 20px}.lb-readout{flex-direction:column;gap:4px}.counts{white-space:normal}.lb-notes{grid-template-columns:1fr;gap:22px}.seg{padding:0 9px;font-size:13px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}

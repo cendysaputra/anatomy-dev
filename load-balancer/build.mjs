@@ -11,7 +11,7 @@ const at=p=>k.iso(p,P),S=(p,o={})=>k.solidSvg(p,{tone:'mid',crease:'lo',...o}),L
 const slab=(p,z,h,o={})=>S(k.slabOf(p,z,h,P,5,.7),o);
 const plan=(x,y,w,d,r=2)=>({x,y,w,d,r});
 const above=([x,y],w,d,h,text)=>{const [cx]=at([x,y,h]);const [,ty]=at([x-w/2,y-d/2,h]);return `<text x="${cx.toFixed(1)}" y="${(ty-12).toFixed(1)}" class="machine-label" text-anchor="middle">${text}</text>`;};
-const beside=([x,y],w,d,h,text,sub)=>{const pts=[[x-w/2,y-d/2],[x+w/2,y-d/2],[x+w/2,y+d/2],[x-w/2,y+d/2]].map(([a,b])=>at([a,b,h/2]));const r=pts.reduce((m,p)=>p[0]>m[0]?p:m);return `<text x="${(r[0]+12).toFixed(1)}" y="${(r[1]-2).toFixed(1)}" class="machine-label">${text}</text><text x="${(r[0]+12).toFixed(1)}" y="${(r[1]+14).toFixed(1)}" class="machine-sub">${sub}</text>`;};
+const beside=([x,y],w,d,h,text,sub)=>{const pts=[[x-w/2,y-d/2],[x+w/2,y-d/2],[x+w/2,y+d/2],[x-w/2,y+d/2]].map(([a,b])=>at([a,b,h/2]));const r=pts.reduce((m,p)=>p[0]>m[0]?p:m);const tx=(r[0]+12).toFixed(1);return `<text x="${tx}" y="${(r[1]-2).toFixed(1)}" class="machine-label">${text}<tspan x="${tx}" dy="1.3em" class="machine-sub">${sub}</tspan></text>`;};
 const tag=(p,text,sub,anchor='middle',dy=0)=>{const [x,y]=at(p);return `<text x="${x.toFixed(1)}" y="${(y+dy).toFixed(1)}" class="machine-label" text-anchor="${anchor}">${text}</text>${sub?`<text x="${x.toFixed(1)}" y="${(y+dy+15).toFixed(1)}" class="machine-sub" text-anchor="${anchor}"${sub.attr||''}>${sub.text}</text>`:''}`;};
 function server([x,y],i){
   let b=slab(plan(x-16,y-16,32,32,3),0,30);
