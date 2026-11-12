@@ -1,4 +1,4 @@
-import {writeFileSync} from 'node:fs';
+import {readFileSync,writeFileSync} from 'node:fs';
 import * as k from '../kit/iso-kit.mjs';
 import {chromeCss,chromeHtml,footerHtml} from '../scripts/chrome.mjs';
 import {GRID,BLOCKS,cityTraffic} from './routes.mjs';
@@ -235,13 +235,13 @@ const glow=(id,colour,stops)=>`<radialGradient id="${id}">${stops.map(([at,alpha
 const defs=`<defs>${glow('lamp-pool','#ffd98a',[[0,.6],[.4,.3],[1,0]])}${glow('lamp-halo','#ffeebd',[[0,1],[.12,.9],[.35,.4],[1,0]])}${glow('tree-pool','#ffc76b',[[0,.5],[.5,.2],[1,0]])}${glow('nose-glow','#ff3b30',[[0,.9],[.3,.45],[1,0]])}<radialGradient id="snowball" cx=".36" cy=".3" r=".8"><stop offset="0" stop-color="#fff"/><stop offset=".5" stop-color="#dde8f8"/><stop offset="1" stop-color="#8fa5c9"/></radialGradient></defs>`;
 objects.sort((a,b)=>a.depth-b.depth);
 const traffic=cityTraffic();
-const fig=k.figureSvg({width:W,height:H,label:`Miniatur kota isometrik berisi ${buildings} gedung, taman, jalan dua arah, dan ${traffic.cars.length} mobil yang bergerak otomatis dalam lintasan looping.`,body:[defs,...ground,`<g id="city-scene">${objects.map((o,i)=>`<g data-city-object="${i}" data-depth="${o.depth.toFixed(6)}" data-kind="${o.kind}">${o.body}</g>`).join('')}</g>`]});
 // The sidebar starts minimised on this page so the map is unobstructed; a button opens it.
+const label=`Miniatur kota isometrik berisi ${buildings} gedung, taman, jalan dua arah, dan ${traffic.cars.length} mobil yang bergerak otomatis dalam lintasan looping.`;
 const menuButton='<button class="menu-toggle" type="button" aria-controls="city-nav" aria-expanded="false" aria-label="Buka menu"><svg class="icon-open" viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 6h13M3.5 10h13M3.5 14h13"/></svg><svg class="icon-close" viewBox="0 0 20 20" aria-hidden="true"><path d="M11.5 5.5L7 10l4.5 4.5M15 5.5L10.5 10l4.5 4.5"/></svg></button>';
 const chrome=chromeHtml({active:'city'}).replace('<section class="page-intro">','<section class="page-intro visually-hidden">').replace('<header class="site-header">','<header class="site-header is-min">'+menuButton).replace('<nav class="iso-nav"','<nav id="city-nav" class="iso-nav"');
-const body=`<style>${chromeCss()}</style><link rel="stylesheet" href="/city/style.css">${chrome}<figure class="city-figure"><div class="city-stage" tabindex="0" role="region" aria-label="Peta kota: seret atau pakai tombol panah untuk bergeser">${fig}</div></figure><script id="city-config" type="application/json">${JSON.stringify({projection:P,buildings,cars:traffic.cars.length})}</script>${footerHtml()}`;
+const body=`<style>${chromeCss()}</style><link rel="stylesheet" href="/city/style.css">${chrome}<figure class="city-figure"><div class="city-stage" tabindex="0" role="region" aria-label="Peta kota: seret atau pakai tombol panah untuk bergeser"><div class="city-map" role="img" aria-label="${label}"></div></div></figure>${footerHtml()}`;
 let html=k.pageHtml({title:'City',theme:'dark',width:1280,body});
-html=html.replace('<html lang="en">','<html lang="id">').replace('</head>','<meta name="description" content="Miniatur kota dengan sudut isometrik Anatomy, dengan puluhan gedung dan mobil yang bergerak looping otomatis."></head>').replace('</body>','<script type="module" src="/city/app.mjs"></script></body>');
+html=html.replace('<html lang="en">','<html lang="id">').replace('</head>','<meta name="description" content="Miniatur kota dengan sudut isometrik Anatomy, dengan puluhan gedung dan mobil yang bergerak looping otomatis."><link rel="preload" href="/city/map.svg" as="fetch" crossorigin><link rel="preload" href="/city/props.json" as="fetch" crossorigin><link rel="modulepreload" href="/city/app.mjs"></head>').replace('</body>','<script type="module" src="/city/app.mjs"></script></body>');
 // Path data is rewritten with relative segments: identical geometry at one-decimal precision,
 // about a quarter fewer bytes of HTML to download and parse. Paths with finer numbers are left alone.
 const num=v=>String(Math.round(v*10)/10).replace(/^(-?)0\./,'$1.');
@@ -257,6 +257,36 @@ function compact(d){
   }
   return out;
 }
-html=html.replace(/ d="([^"]*)"/g,(match,d)=>' d="'+compact(d)+'"');
 writeFileSync(new URL('index.html',import.meta.url),html);
+// The map is not part of the page. It is a standalone SVG that the page draws once into bitmap
+// tiles at the screen's own resolution (see map.mjs), so the browser never has to rasterise ten
+// thousand vector shapes while the map is being dragged. The kit and city styles are embedded;
+// the two wrapper groups stand in for the page's <body class="iso"> and .city-stage.
+const css=k.ISO_CSS+readFileSync(new URL('style.css',import.meta.url),'utf8');
+const map=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}"><style><![CDATA[${css}]]></style><g class="iso" data-theme="dark"><g class="iso-svg city-stage"><rect class="ice-sheet" width="${W}" height="${H}"/>${defs}${ground.join('')}${objects.map(o=>o.body).join('')}</g></g></svg>`;
+writeFileSync(new URL('map.svg',import.meta.url),map.replace(/ d="([^"]*)"/g,(match,d)=>' d="'+compact(d)+'"'));
+// What the car canvas needs to know about the scene: every object's depth, bounds and the
+// outlines that can hide a car, far to near, plus the lights on each decorated tree.
+const SOLID=['iso-fill','cone-side','hatcone-side','xmas-star','snow-cut'];
+const round1=v=>Math.round(v*10)/10;
+const props=[],garlands=[];
+for(const o of objects){
+  const lamp=o.body.startsWith('<g class="street-light">'),cuts=[];let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+  for(const [,cls,d] of o.body.matchAll(/<path class="([^"]*)"[^>]*? d="([^"]*)"/g)){
+    const n=d.match(/-?\d*\.?\d+/g)||[];
+    for(let i=0;i+1<n.length;i+=2){x0=Math.min(x0,+n[i]);y0=Math.min(y0,+n[i+1]);x1=Math.max(x1,+n[i]);y1=Math.max(y1,+n[i+1]);}
+    const names=cls.split(' '),solid=names.some(name=>SOLID.includes(name));
+    // 1 = fill, 2 = stroke its edge: solids do both, snow only fills, a lamp post is a bare line.
+    if(solid)cuts.push([compact(d),names.includes('snow-cut')?1:3]);else if(lamp&&cls==='iso-line')cuts.push([compact(d),2]);
+  }
+  const dots=[...o.body.matchAll(/<g class="bauble bauble-(\d)">(.*?)<\/g>/g)].flatMap(([,tone,inner])=>[...inner.matchAll(/cx="([^"]+)" cy="([^"]+)" r="([^"]+)"/g)].map(([,cx,cy,r])=>[+cx,+cy,+r,+tone]));
+  const prop={z:+o.depth.toFixed(3),b:[x0,y0,x1,y1].map(round1),w:o.body.includes('class="tree"')?.4:.55,c:cuts};
+  if(dots.length){
+    prop.o=dots.map(([cx,cy,r])=>[cx,cy,r]);
+    const star=(o.body.match(/class="xmas-star" d="([^"]*)"/)[1].match(/-?\d*\.?\d+/g)).map(Number),xs=star.filter((_,i)=>i%2===0),ys=star.filter((_,i)=>i%2===1);
+    garlands.push({z:prop.z,bulbs:dots.map(([cx,cy,,tone])=>[cx,cy,tone]),star:[round1((Math.min(...xs)+Math.max(...xs))/2),round1((Math.min(...ys)+Math.max(...ys))/2)]});
+  }
+  props.push(prop);
+}
+writeFileSync(new URL('props.json',import.meta.url),JSON.stringify({world:{width:W,height:H},projection:P,props,garlands}));
 console.log(`Built city · ${buildings} buildings · ${traffic.cars.length} cars · ${trees} trees`);
