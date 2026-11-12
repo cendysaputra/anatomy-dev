@@ -30,10 +30,14 @@ a{color:inherit}button,select,input{font:inherit}button,a,select,input{touch-act
 `;
 }
 export function chromeHtml({ active, theme = 'light' }) {
-  const hrefs = theme === 'dark' ? { hill:'/dark', lb:'/load-balancer/dark', cache:'/cache' } : { hill:'/', lb:'/load-balancer', cache:'/cache' };
-  const link=(id,label)=>`<a href="${hrefs[id]}"${active===id?' aria-current="page"':''}>${label}</a>`;
-  const lb=active==='lb';
-  const isCache=active==='cache';
-  return `<header class="site-header"><a class="brand" href="/" aria-label="Anatomy Dev beranda">anatomy<span> / dev</span></a><nav class="iso-nav" aria-label="Pilih ilustrasi">${link('lb','Load balancing')}${link('hill','Hill climbing')}${link('cache','Cache')}</nav><p class="side-foot"><a href="https://github.com/wheresryan22/anatomy" target="_blank" rel="noreferrer">Dibuat dengan Anatomy</a></p></header><section class="page-intro"><h1>${isCache?'Cache':lb?'Load balancing':'Hill climbing'}</h1><p class="intro-copy">${isCache?'Simpan sekali, ambil lebih cepat. Ikuti perjalanan data saat cache masih kosong dan saat sudah terisi.':lb?'Satu alamat di depan, beberapa server di belakang. Pilih cara membagi request, lalu matikan satu server dan lihat apa yang terjadi.':'Dari posisi sekarang, lihat kiri dan kanan, lalu naik ke yang lebih tinggi. Ulangi sampai tidak ada lagi yang lebih tinggi, entah itu puncak tertinggi atau bukan.'}</p></section>`;
+  const pages={
+    lb:{title:'Load balancing',href:theme==='dark'?'/load-balancer/dark':'/load-balancer',copy:'Satu alamat di depan, beberapa server di belakang. Pilih cara membagi request, lalu matikan satu server dan lihat apa yang terjadi.'},
+    hill:{title:'Hill climbing',href:theme==='dark'?'/dark':'/',copy:'Dari posisi sekarang, lihat kiri dan kanan, lalu naik ke yang lebih tinggi. Ulangi sampai tidak ada lagi yang lebih tinggi, entah itu puncak tertinggi atau bukan.'},
+    cache:{title:'Cache',href:'/cache',copy:'Simpan sekali, ambil lebih cepat. Ikuti perjalanan data saat cache masih kosong dan saat sudah terisi.'},
+    cdn:{title:'CDN',href:'/cdn',copy:'Aset yang sama, lebih dekat ke pengguna. Lihat edge CDN mengambil salinan dari origin, lalu melayani request berikutnya.'}
+  };
+  const current=pages[active]??pages.hill;
+  const links=Object.entries(pages).map(([id,page])=>`<a href="${page.href}"${active===id?' aria-current="page"':''}>${page.title}</a>`).join('');
+  return `<header class="site-header"><a class="brand" href="/" aria-label="Anatomy Dev beranda">anatomy<span> / dev</span></a><nav class="iso-nav" aria-label="Pilih ilustrasi">${links}</nav><p class="side-foot"><a href="https://github.com/wheresryan22/anatomy" target="_blank" rel="noreferrer">Dibuat dengan Anatomy</a></p></header><section class="page-intro"><h1>${current.title}</h1><p class="intro-copy">${current.copy}</p></section>`;
 }
 export function footerHtml(){return `<footer class="site-footer" aria-hidden="true"></footer>`;}
