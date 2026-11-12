@@ -30,3 +30,18 @@ test('animation entry loads from every supported keyboard URL',()=>{
   assert.ok(existsSync(new URL('..'+resolved.pathname,import.meta.url)));
  }
 });
+
+import {labels,labelOpacity,arrangeLabels} from './labels.mjs';
+test('every component layer is labelled and labels stay hidden until opening',()=>{
+ assert.deepEqual(new Set(labels.map(l=>l.layer)),new Set(Object.keys(layers)));
+ assert.equal(new Set(labels.map(l=>l.id)).size,labels.length);
+ for(const label of labels){assert.equal(labelOpacity(label.layer,0),0);assert.equal(labelOpacity(label.layer,1),1)}
+});
+test('crowded label anchors keep readable spacing within the stage',()=>{
+ for(const height of [240,640]){
+  const arranged=arrangeLabels([10,11,12,height-1,height+20].map((y,id)=>({y,id})),height);
+  assert.ok(arranged[0].y>=24);
+  assert.ok(arranged.at(-1).y<=height-24);
+  for(let i=1;i<arranged.length;i++)assert.ok(arranged[i].y-arranged[i-1].y>=30);
+ }
+});
