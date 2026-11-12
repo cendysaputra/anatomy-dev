@@ -23,6 +23,10 @@
     {
       "source": "/cdn",
       "destination": "/cdn/index.html"
+    },
+    {
+      "source": "/city",
+      "destination": "/city/index.html"
     }
   ]
 }

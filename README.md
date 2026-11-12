@@ -10,6 +10,7 @@ Interactive visual explanations built with the [Anatomy](https://github.com/wher
 | Load balancing | `/load-balancer` | `/load-balancer/dark` |
 | Cache | `/cache` | White canvas |
 | CDN | `/cdn` | White canvas |
+| Kota | `/city` | White canvas |
 
 ### Load balancer
 
@@ -33,6 +34,10 @@ Choose Jakarta or Frankfurt to route a request for `hero.webp` to its illustrati
 
 Reference: [Cloudflare CDN overview](https://www.cloudflare.com/learning/cdn/what-is-a-cdn/).
 
+### Kota
+
+An Anatomy miniature city viewed from above at an isometric angle: 56 varied buildings, two parks, a two-way street grid and 32 cars. Animation starts automatically with no playback buttons. Cars follow tangent-continuous rounded loops around the city blocks; the scene sorts moving cars with buildings so occlusion remains correct. The animation pauses off-screen and respects the device’s reduced-motion setting. This is a visual city scene, not a traffic simulation.
+
 ## Development
 
 The readable source is `load-balancer/build.mjs`, `load-balancer/app.mjs`, `load-balancer/model.mjs`, and `load-balancer/style.css`. Shared full-width layout and typography live in `scripts/chrome.mjs`. Titles use IBM Plex Sans, and body text uses Manrope at 14px. Fonts are loaded through Google Fonts with system fallbacks.
@@ -44,12 +49,14 @@ node load-balancer/build.mjs
 node load-balancer/build.mjs --dark
 node cache/build.mjs
 node cdn/build.mjs
+node city/build.mjs
+node --test city/routes.test.mjs
 node --test cdn/model.test.mjs
 node --test load-balancer/model.test.mjs
 ```
 
 Serve the repository root with any static HTTP server and open `/load-balancer/index.html`. Clean URLs use the rewrites in `vercel.json`.
 
-Generated HTML files are committed so Vercel can serve the project directly. When changing a builder or shared layout, rebuild its HTML files before committing. The CDN addition is on `feature/cdn-illustration`, based on the latest shared layout.
+Generated HTML files are committed so Vercel can serve the project directly. When changing a builder or shared layout, rebuild its HTML files before committing. The city addition is on `feature/anatomy-city`, based on the latest shared layout.
 
 Anatomy is MIT licensed; see `LICENSE-anatomy`.
