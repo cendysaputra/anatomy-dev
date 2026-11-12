@@ -36,7 +36,7 @@ Reference: [Cloudflare CDN overview](https://www.cloudflare.com/learning/cdn/wha
 
 ### City
 
-An Anatomy miniature city viewed at the same 30-degree isometric elevation as the other Anatomy illustrations, with inherited neutral tones: 56 varied buildings, two parks, a two-way street grid and 32 cars. Animation starts automatically with no playback buttons. Cars follow tangent-continuous rounded loops around the city blocks; the scene sorts moving cars with buildings so occlusion remains correct. The animation pauses off-screen and respects the device’s reduced-motion setting. This is a visual city scene, not a traffic simulation.
+An Anatomy miniature city viewed at the same 30-degree isometric elevation as the other Anatomy illustrations, with inherited neutral tones: 56 varied buildings, two parks, a two-way street grid and 32 cars. The view opens at 220% zoom; use wheel/pinch or the zoom buttons to move closer/further, drag to pan, or fit the entire city. Keyboard: +/−, arrows, and 0/Home. Animation starts automatically with no playback buttons. Cars follow tangent-continuous rounded loops around the city blocks; the scene sorts moving cars with buildings so occlusion remains correct. The animation pauses off-screen and respects the device’s reduced-motion setting. This is a visual city scene, not a traffic simulation.
 
 ## Development
 
@@ -50,13 +50,13 @@ node load-balancer/build.mjs --dark
 node cache/build.mjs
 node cdn/build.mjs
 node city/build.mjs
-node --test city/routes.test.mjs
+node --test city/routes.test.mjs city/camera.test.mjs
 node --test cdn/model.test.mjs
 node --test load-balancer/model.test.mjs
 ```
 
 Serve the repository root with any static HTTP server and open `/load-balancer/index.html`. Clean URLs use the rewrites in `vercel.json`.
 
-Generated HTML files are committed so Vercel can serve the project directly. When changing a builder or shared layout, rebuild its HTML files before committing. The city addition is on `feature/city-anatomy-style`, based on the latest shared layout.
+Generated HTML files are committed so Vercel can serve the project directly. When changing a builder or shared layout, rebuild its HTML files before committing. The city addition is on `feature/city-zoom-pan`, based on the latest shared layout.
 
 Anatomy is MIT licensed; see `LICENSE-anatomy`.

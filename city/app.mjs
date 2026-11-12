@@ -1,3 +1,4 @@
+import {setupCamera} from './controls.mjs';
 import {iso,extrude,roundedPlan,depthOf} from '../kit/iso-kit.mjs';
 import {cityTraffic,sample} from './routes.mjs';
 const P=JSON.parse(document.querySelector('#city-config').textContent).projection;
@@ -44,8 +45,4 @@ new IntersectionObserver(entries=>{visible=entries.at(-1).isIntersecting;if(visi
 document.addEventListener('visibilitychange',run);
 reduced.addEventListener('change',()=>{if(reduced.matches){cancelAnimationFrame(frame);frame=0;last=0;}else run();});
 render(0);run();
-// Start a narrow viewport at the heart of the city; users can still pan freely.
-const stage=document.querySelector('.city-stage');
-let centered=false;
-function centerCity(){if(!centered&&stage.scrollWidth>stage.clientWidth){stage.scrollLeft=(stage.scrollWidth-stage.clientWidth)/2;centered=true;}}
-new ResizeObserver(centerCity).observe(stage);centerCity();
+setupCamera(document.querySelector('.city-stage'));
