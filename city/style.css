@@ -83,3 +83,11 @@ body:has(.city-stage) .site-header.is-min{width:max-content;height:auto;flex-dir
 .city-stage,.city-stage .iso-svg{background:#123650}
 .ice-frost{fill:#cdeafa;opacity:.1}.ice-rim{fill:#6fa8c6;opacity:.5}
 .ice-cracks{fill:none;stroke:#c4e9fb;stroke-width:.8;stroke-linecap:round;stroke-linejoin:round;opacity:.5}.ice-glint{fill:#e9f7ff;opacity:.55}
+/* Central square: a giant snowman in scarf and Santa hat, and a gilded reindeer statue. */
+.ball{fill:url(#snowball)}.coal{fill:#131928}.carrot{fill:#ff8a3d}.twig{fill:none;stroke:#8a623e;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.scarf{--anatomy-paper:#d8382e;--anatomy-top:#f0584a;--anatomy-shade-0:#a3241c;--anatomy-shade-1:#b52b22;--anatomy-shade-2:#c63228;--anatomy-shade-3:#d8382e;--anatomy-lo:#861b14;--anatomy-mid:#861b14}.scarf-tail{fill:#c63228}
+.hat-brim{--anatomy-paper:#eef4fc;--anatomy-top:#fff;--anatomy-shade-0:#aebfda;--anatomy-shade-1:#c0cfe6;--anatomy-shade-2:#d3dff0;--anatomy-shade-3:#e6eefa;--anatomy-lo:#93a7c9;--anatomy-mid:#93a7c9}
+.hatcone-side{fill:#e2463b}.hatcone-shade{fill:#ae2a22}
+.statue{--anatomy-paper:#d2a947;--anatomy-top:#f6dc8e;--anatomy-shade-0:#a57c24;--anatomy-shade-1:#b98d2f;--anatomy-shade-2:#cc9f3c;--anatomy-shade-3:#deb24c;--anatomy-lo:#7d5c14;--anatomy-mid:#7d5c14}
+.plinth{--anatomy-paper:#6d7c9c;--anatomy-top:#b9c6da;--anatomy-shade-0:#4c5a79;--anatomy-shade-1:#56658a;--anatomy-shade-2:#617096;--anatomy-shade-3:#6d7c9c;--anatomy-lo:#3d4a66;--anatomy-mid:#3d4a66}
+.antler{fill:none;stroke:#f3d47c;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.rudolph{fill:#ff3b30}.nose-glow{fill:url(#nose-glow)}

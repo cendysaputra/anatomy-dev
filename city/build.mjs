@@ -61,6 +61,40 @@ function pine(x,y,size=1,big=false){
  }
  add(x,y,`<path class="tree-shadow" d="${top(plan(x-2*size,y-2*size,(big?14:8)*size,(big?14:8)*size,4))}"/>${body}`,'tree');
 }
+// In this orthographic camera a sphere is a plain circle on screen, so the snowman's snowballs
+// are round polygons with a shaded gradient; everything else is ordinary kit solids.
+const KK=k.cameraOf(P).k;
+const disc=(sx,sy,r,n=28)=>poly(Array.from({length:n},(_,i)=>{const a=i/n*Math.PI*2;return [sx+Math.cos(a)*r,sy+Math.sin(a)*r];}));
+const ball=(x,y,z,r)=>{const [sx,sy]=at([x,y,z]);return `<path class="ball snow-cut" d="${disc(sx,sy,r*KK)}"/>`;};
+function snowman(x,y){
+  const [mx,my]=at([x,y,26]),[hx,hy]=at([x,y,36.5]),u=[Math.sin(62*Math.PI/180),-Math.cos(62*Math.PI/180)];
+  const arm=side=>k.pathOf([[7,27],[13,31],[16,34]].map(([r,z])=>at([x+u[0]*r*side,y+u[1]*r*side,z])))+k.pathOf([[13,31],[15.5,30]].map(([r,z])=>at([x+u[0]*r*side,y+u[1]*r*side,z])));
+  let out=`<path class="tree-shadow" d="${top(plan(x-7,y-5,30,26,12),1.1)}"/>`;
+  out+=ball(x,y,11,11)+`<path class="twig" d="${arm(1)+arm(-1)}"/>`+ball(x,y,26,8);
+  out+=`<path class="coal" d="${[-2.6,.8,4.2].map(dy=>disc(mx,my+dy*KK,.8*KK,10)).join('')}"/>`;
+  // Scarf: a red band round the neck with one end hanging down the front.
+  const tail=[[.25,31.5],[.6,31.5],[.66,22.5],[.3,22]].map(([a,z])=>at([x+Math.cos(a+.9)*6.1,y+Math.sin(a+.9)*6.1,z]));
+  out+=`<g class="scarf">${S(k.cylinder(x,y,5.9,31,2.6,P,20))}</g><path class="scarf-tail" d="${poly(tail)}"/>`;
+  out+=ball(x,y,36.5,5.8);
+  out+=`<path class="coal" d="${disc(hx-2*KK,hy-1.1*KK,.75*KK,10)+disc(hx+2*KK,hy-1.1*KK,.75*KK,10)+[-2.4,-1.2,0,1.2,2.4].map(dx=>disc(hx+dx*KK,hy+(3.1-Math.abs(dx)*.35)*KK,.38*KK,8)).join('')}"/>`;
+  out+=`<path class="carrot" d="${poly([[hx-.2*KK,hy+.1*KK],[hx-.2*KK,hy+1.7*KK],[hx+6.4*KK,hy+1.5*KK]])}"/>`;
+  // Santa hat: white brim, red cone, white bobble.
+  out+=`<g class="hat-brim">${S(k.cylinder(x,y,5.3,39.8,2,P,20))}</g>`+cone(x,y,4.7,41.6,9.5,'hatcone')+ball(x,y,51.6,2);
+  add(x,y,out,'detail');
+}
+// A gilded reindeer statue on a stone plinth, with a red nose that glows.
+function reindeer(x,y,s=1.55){
+  const box=(dx,dy,w,d,z,h,r=.8)=>slab(plan(x+dx*s,y+dy*s,w*s,d*s,r),1+z*s,h*s);
+  const antler=side=>k.pathOf([[4.6,1.1,22],[3.6,2.4,25.5],[2.2,3.4,29.5]].map(([dx,dy,z])=>at([x+dx*s,y+dy*side*s,1+z*s])))
+    +k.pathOf([[3.6,2.4,25.5],[5.6,3,27.5]].map(([dx,dy,z])=>at([x+dx*s,y+dy*side*s,1+z*s])))
+    +k.pathOf([[2.9,2.9,27.5],[1,2.6,28.6]].map(([dx,dy,z])=>at([x+dx*s,y+dy*side*s,1+z*s])));
+  const [nx,ny]=at([x+10*s,y,1+20.2*s]);
+  let out=`<path class="tree-shadow" d="${top(plan(x-9*s,y-4*s,22*s,13*s,5),1.1)}"/><g class="plinth">${box(-9.5,-4.6,19,9.2,0,2.2,1.4)}</g><g class="statue">`;
+  out+=box(-6,-2.7,1.6,1.6,2.2,6.2)+box(4,-2.7,1.6,1.6,2.2,6.2)+box(-6,1.1,1.6,1.6,2.2,6.2)+box(4,1.1,1.6,1.6,2.2,6.2);
+  out+=box(-8,-.8,1.3,1.6,11.4,1.8)+box(-7,-2.8,13.6,5.6,8.2,5,1.5)+box(3.7,-1.5,3,3,13,5.8)+box(3.3,-1.8,6.6,3.6,18.6,3.4,1.2);
+  out+=`</g><path class="antler" d="${antler(-1)+antler(1)}"/><circle class="nose-glow" cx="${nx.toFixed(1)}" cy="${ny.toFixed(1)}" r="${(5*s*KK).toFixed(1)}"/><path class="rudolph" d="${disc(nx,ny,1.15*s*KK,14)}"/>`;
+  add(x,y,out,'detail');
+}
 function building(x,y,w,d,h,seed){
  buildings++;
  const shell=plan(x,y,w,d,1.1),setback=seed%4===0;
@@ -124,7 +158,14 @@ const MID=(BLOCKS-1)/2;
 for(let row=0;row<BLOCKS;row++)for(let col=0;col<BLOCKS;col++){
  const x=GRID[col]+13,y=GRID[row]+13,cx=x+35,cy=y+35,seed=row*BLOCKS+col;
  ground.push(`<g class="sidewalk">${slab(plan(x-2,y-2,74,74,4),.2,.8)}</g>`);
- if(PARKS.has(row+','+col)){
+ if(row===MID&&col===MID){
+   // The central square: no buildings, just a giant snowman and the reindeer statue.
+   ground.push(`<path class="park-ground" d="${top(plan(x+2,y+2,66,66,3),1.05)}"/>`);
+   for(const [dx,dy,i] of [[-20,-20,0],[22,-18,1],[-21,21,2],[20,22,3],[0,2,4]])snowHeap(cx+dx,cy+dy,12,10,seed*17+i,0);
+   lampPools+=`<path class="tree-pool" d="${flat(k.circleRing(cx-13,cy-9,26,24),1.12)}"/><path class="tree-pool" d="${flat(k.circleRing(cx+17,cy+15,24,24),1.12)}"/>`;
+   snowman(cx-13,cy-9);reindeer(cx+15,cy+15);
+   for(const [dx,dy] of [[-28,26],[28,-27]])pine(cx+dx,cy+dy,1.1);
+ }else if(PARKS.has(row+','+col)){
    ground.push(`<path class="park-ground" d="${top(plan(x+2,y+2,66,66,3),1.05)}"/><path class="park-path" d="${top(plan(cx-3,y+2,6,66,0),1.1)+top(plan(x+2,cy-3,66,6,0),1.1)}"/>`);
    for(const [dx,dy,i] of [[-18,-18,0],[18,-17,1],[-17,18,2],[18,18,3]])snowHeap(cx+dx,cy+dy,11,10,seed*17+i,0);
    lampPools+=`<path class="tree-pool" d="${flat(k.circleRing(cx,cy,30,24),1.12)}"/>`;
@@ -155,7 +196,7 @@ for(let row=0;row<BLOCKS;row++)for(let col=0;col<BLOCKS;col++){
 for(const p of GRID.slice(0,-1).map(g=>g+38)){tree(-HALF+6,p,.8);tree(HALF-6,p,.8);tree(p,-HALF+6,.8);tree(p,HALF-6,.8);}
 ground.push(`<path class="snow-side" d="${snowSides}"/><path class="snow-top snow-ground" d="${snowTops}"/><g class="lamp-pool">${lampPools}</g>`);
 const glow=(id,colour,stops)=>`<radialGradient id="${id}">${stops.map(([at,alpha])=>`<stop offset="${at}" stop-color="${colour}" stop-opacity="${alpha}"/>`).join('')}</radialGradient>`;
-const defs=`<defs>${glow('lamp-pool','#ffd98a',[[0,.6],[.4,.3],[1,0]])}${glow('lamp-halo','#ffeebd',[[0,1],[.12,.9],[.35,.4],[1,0]])}${glow('tree-pool','#ffc76b',[[0,.5],[.5,.2],[1,0]])}</defs>`;
+const defs=`<defs>${glow('lamp-pool','#ffd98a',[[0,.6],[.4,.3],[1,0]])}${glow('lamp-halo','#ffeebd',[[0,1],[.12,.9],[.35,.4],[1,0]])}${glow('tree-pool','#ffc76b',[[0,.5],[.5,.2],[1,0]])}${glow('nose-glow','#ff3b30',[[0,.9],[.3,.45],[1,0]])}<radialGradient id="snowball" cx=".36" cy=".3" r=".8"><stop offset="0" stop-color="#fff"/><stop offset=".5" stop-color="#dde8f8"/><stop offset="1" stop-color="#8fa5c9"/></radialGradient></defs>`;
 objects.sort((a,b)=>a.depth-b.depth);
 const traffic=cityTraffic();
 const fig=k.figureSvg({width:W,height:H,label:`Miniatur kota isometrik berisi ${buildings} gedung, taman, jalan dua arah, dan ${traffic.cars.length} mobil yang bergerak otomatis dalam lintasan looping.`,body:[defs,...ground,`<g id="city-scene">${objects.map((o,i)=>`<g data-city-object="${i}" data-depth="${o.depth.toFixed(6)}" data-kind="${o.kind}">${o.body}</g>`).join('')}</g>`]});

@@ -48,7 +48,7 @@ function touching(a,ox,oy,b){
 function shapeOf(prop){
   if(prop.shape)return prop.shape;
   const cuts=[];
-  for(const node of prop.node.querySelectorAll('.iso-fill,.cone-side,.xmas-star,.snow-cut,.street-light>.iso-line')){
+  for(const node of prop.node.querySelectorAll('.iso-fill,.cone-side,.hatcone-side,.xmas-star,.snow-cut,.street-light>.iso-line')){
     const d=node.getAttribute('d'),points=[];let x=0,y=0;
     // Built paths use absolute M/L and relative l segments.
     for(const [,op,a,b] of d.matchAll(/([MLl])(-?\d*\.?\d+) ?(-?\d*\.?\d+)/g)){if(op==='l'){x+=+a;y+=+b;}else{x=+a;y=+b;}points.push([x,y]);}
