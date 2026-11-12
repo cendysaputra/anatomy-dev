@@ -27,6 +27,10 @@
     {
       "source": "/city",
       "destination": "/city/index.html"
+    },
+    {
+      "source": "/keyboard",
+      "destination": "/keyboard/index.html"
     }
   ]
 }
