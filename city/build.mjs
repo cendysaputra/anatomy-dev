@@ -22,14 +22,35 @@ const poly=pts=>'M'+pts.map(([a,b])=>a.toFixed(1)+' '+b.toFixed(1)).join('L')+'Z
 const seeded=seed=>{let s=(Math.imul(seed+11,2654435761))>>>0;return()=>((s=(Math.imul(s,1664525)+1013904223)>>>0)/4294967296);};
 const flat=(points,z)=>poly(points.map(([x,y])=>at([x,y,z])));
 // A plan outline pulled inward by uneven amounts, so a snow sheet gets a soft irregular edge.
+// Snow never settles in a neat rectangle. The outline follows the plan but is pushed in and out by
+// a few overlapping waves: broad swells, smaller lobes and a little fine raggedness, so some
+// stretches bulge out bluntly and others are nibbled back.
+const waves=next=>[[2+Math.floor(next()*3),.55],[5+Math.floor(next()*4),.34],[11+Math.floor(next()*6),.16],[23+Math.floor(next()*9),.07]].map(([f,a])=>[f,a,next()*Math.PI*2]);
+const swell=(shape,t)=>shape.reduce((sum,[f,a,phase])=>sum+Math.sin(t*f+phase)*a,0);
 function drifted(p,seed,wobble=1.3){
-  const next=seeded(seed),cx=p.x+p.w/2,cy=p.y+p.d/2;
-  return k.roundedPlan({...p,r:Math.min(p.r,p.w/2,p.d/2)},4).map(([x,y])=>{const t=next()*wobble,dx=cx-x,dy=cy-y,l=Math.hypot(dx,dy)||1;return [x+dx/l*t,y+dy/l*t];});
+  const next=seeded(seed),cx=p.x+p.w/2,cy=p.y+p.d/2,corners=k.roundedPlan({...p,r:Math.min(p.r,p.w/2,p.d/2)},5),ring=[];
+  // Straight edges get a point every couple of units so they can wander too.
+  corners.forEach(([x,y],i)=>{const [bx,by]=corners[(i+1)%corners.length],n=Math.max(1,Math.round(Math.hypot(bx-x,by-y)/2.2));for(let j=0;j<n;j++)ring.push([x+(bx-x)*j/n,y+(by-y)*j/n]);});
+  const shape=waves(next);
+  return ring.map(([x,y],i)=>{const t=i/ring.length*Math.PI*2,pull=(.45+swell(shape,t))*wobble,dx=cx-x,dy=cy-y,l=Math.hypot(dx,dy)||1;return [x+dx/l*pull,y+dy/l*pull];});
 }
-// An uneven round heap, as plan points.
-function heap(cx,cy,rx,ry,seed,scale=1){const next=seeded(seed);return Array.from({length:12},(_,i)=>{const a=i/12*Math.PI*2,f=(.72+next()*.28)*scale;return [cx+Math.cos(a)*rx*f,cy+Math.sin(a)*ry*f];});}
+// An uneven rounded heap, as plan points: a lumpy outline rather than a clean oval.
+function heap(cx,cy,rx,ry,seed,scale=1){const shape=waves(seeded(seed));return Array.from({length:22},(_,i)=>{const a=i/22*Math.PI*2,f=(.84+swell(shape,a)*.2)*scale;return [cx+Math.cos(a)*rx*f,cy+Math.sin(a)*ry*f];});}
 // A snow sheet with visible thickness: its lower outline in shade, its top in white.
 const snowSheet=(p,z,seed,depth=.7)=>{const ring=drifted(p,seed);return `<path class="snow-side snow-cut" d="${flat(ring,z)}"/><path class="snow-top snow-cut" d="${flat(ring,z+depth)}"/>`;};
+// Roof snow is not a flat lid: a few soft mounds rise from it, and here and there a blunt tongue
+// of snow sags over the two edges we can see.
+function roofSnow(p,z,seed){
+  const next=seeded(seed+31);let sides='',tops='',tongues='';
+  for(let n=2+Math.floor(next()*2);n>0;n--){
+    const rx=2.6+next()*3.2,ry=2.4+next()*2.6,cx=p.x+rx+1+next()*Math.max(1,p.w-2*rx-2),cy=p.y+ry+1+next()*Math.max(1,p.d-2*ry-2),rise=.8+next()*.9;
+    sides+=flat(heap(cx,cy,rx,ry,seed*13+n),z+.7);tops+=flat(heap(cx,cy,rx,ry,seed*13+n,.74),z+.7+rise);
+  }
+  const tongue=(point,q,width,drop)=>poly([[-.5,0],[-.5,-.55],[-.3,-.9],[0,-1],[.3,-.9],[.5,-.55],[.5,0]].map(([u,v])=>at(point(q+u*width,z+.5+v*drop))));
+  for(let n=1+Math.floor(next()*3);n>0;n--)tongues+=tongue((q,h)=>[p.x+q,p.y+p.d+.7,h],2+next()*(p.w-4),1.6+next()*2.4,.9+next()*1.3);
+  for(let n=1+Math.floor(next()*3);n>0;n--)tongues+=tongue((q,h)=>[p.x+p.w+.7,p.y+q,h],2+next()*(p.d-4),1.6+next()*2.4,.9+next()*1.3);
+  return snowSheet(p,z,seed)+`<path class="snow-side" d="${sides}"/><path class="snow-top snow-cut" d="${tops}"/><path class="snow-top snow-drip" d="${tongues}"/>`;
+}
 let snowSides='',snowTops='',lampPools='';
 // A thin diamond: with a radial fill it reads as one streak of a lens flare.
 const flare=(x,y,rx,ry)=>poly([[x-rx,y],[x,y-ry],[x+rx,y],[x,y+ry]]);
@@ -112,12 +133,12 @@ function building(x,y,w,d,h,seed){
  // Fairy lights strung under the roof edge of every other building, on the two faces we can see.
  if(seed%2===0){
    const bulbs=['','','',''];let n=seed;
-   const bulb=(x,y)=>{const [px,py]=at([x,y,h+.1]);bulbs[n++%4]+='M'+px.toFixed(1)+' '+py.toFixed(1)+'l0 0';};
+   const bulb=(x,y)=>{const [px,py]=at([x,y,h-1.4]);bulbs[n++%4]+='M'+px.toFixed(1)+' '+py.toFixed(1)+'l0 0';};
    for(let q=1.5;q<=tower.w-1.5;q+=3)bulb(tower.x+q,tower.y+tower.d);
    for(let q=tower.d-3;q>=1.5;q-=3)bulb(tower.x+tower.w,tower.y+q);
    out+=bulbs.map((d,i)=>`<path class="fairy-glow fairy-${i}" d="${d}"/>`).join('')+bulbs.map((d,i)=>`<path class="fairy fairy-${i}" d="${d}"/>`).join('')+`<path class="fairy-core" d="${bulbs.join('')}"/>`;
  }
- out+=snowSheet(k.insetPlan({...tower,r:3.5},.7),h+1,seed*3+2);
+ out+=roofSnow(k.insetPlan({...tower,r:3.5},.7),h+1,seed*3+2);
  if(seed%3===0){out+=`<g class="roof-machine">${slab(plan(tower.x+3,tower.y+3,5,7,1),h+1,2.2)}</g>`;out+=line([[tower.x+4,tower.y+5,h+3.2],[tower.x+7,tower.y+5,h+3.2]],{tone:'lo'});}
  else if(seed%3===1){out+=`<g class="solar"><path d="${top(plan(tower.x+3,tower.y+3,8,10,.2),h+1.2)}"/>${line([[tower.x+7,tower.y+3,h+1.3],[tower.x+7,tower.y+13,h+1.3]],{tone:'faint'})}</g>`;}
  else out+=`<g class="roof-machine">${S(k.cylinder(tower.x+tower.w/2,tower.y+tower.d/2,3,h+1,3,P,14))}</g>`;

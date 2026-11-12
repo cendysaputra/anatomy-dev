@@ -91,3 +91,4 @@ body:has(.city-stage) .site-header.is-min{width:max-content;height:auto;flex-dir
 .statue{--anatomy-paper:#d2a947;--anatomy-top:#f6dc8e;--anatomy-shade-0:#a57c24;--anatomy-shade-1:#b98d2f;--anatomy-shade-2:#cc9f3c;--anatomy-shade-3:#deb24c;--anatomy-lo:#7d5c14;--anatomy-mid:#7d5c14}
 .plinth{--anatomy-paper:#6d7c9c;--anatomy-top:#b9c6da;--anatomy-shade-0:#4c5a79;--anatomy-shade-1:#56658a;--anatomy-shade-2:#617096;--anatomy-shade-3:#6d7c9c;--anatomy-lo:#3d4a66;--anatomy-mid:#3d4a66}
 .antler{fill:none;stroke:#f3d47c;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.rudolph{fill:#ff3b30}.nose-glow{fill:url(#nose-glow)}
+.snow-drip{stroke-width:.35}
