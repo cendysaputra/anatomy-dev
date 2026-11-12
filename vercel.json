@@ -1,6 +1,20 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/hill-climbing/hill-climbing-light.html" },
-    { "source": "/dark", "destination": "/hill-climbing/hill-climbing.html" }
+    {
+      "source": "/",
+      "destination": "/hill-climbing/hill-climbing-light.html"
+    },
+    {
+      "source": "/dark",
+      "destination": "/hill-climbing/hill-climbing.html"
+    },
+    {
+      "source": "/load-balancer",
+      "destination": "/load-balancer/index.html"
+    },
+    {
+      "source": "/load-balancer/dark",
+      "destination": "/load-balancer/dark.html"
+    }
   ]
 }
