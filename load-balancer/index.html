@@ -113,23 +113,23 @@ body{margin:0;background:var(--anatomy-page);color:var(--anatomy-text);font:14px
 .iso-page{width:min(1280px,100% - 32px);margin:64px auto 96px}
 </style><meta name="description" content="Pelajari cara kerja load balancer melalui simulasi isometrik interaktif. Bandingkan round robin, least connections, dan weighted routing."></head><body class="iso" data-theme="light"><main class="iso-page"><style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400&family=Manrope:wght@400;500;600&display=swap');
-:root{--heading:'IBM Plex Sans',sans-serif;--body:'Manrope',sans-serif;--mono:'IBM Plex Mono',ui-monospace,monospace;--accent:#b85b39;--gutter:clamp(16px,4vw,56px)}
+:root{--heading:'IBM Plex Sans',sans-serif;--body:'Manrope',sans-serif;--mono:'IBM Plex Mono',ui-monospace,monospace;--accent:#b85b39;--gutter:clamp(16px,4vw,56px);--radius:14px}
 body.iso{font:400 16px/1.65 var(--body)}
-.iso[data-theme="light"]{--anatomy-page:#fff;--anatomy-strong:#1d1f1c;--anatomy-text:#555a54;--anatomy-muted:#868b84;--anatomy-card:#fff;--anatomy-paper:#fff;--anatomy-top:#fff;--anatomy-mid:#879181;--anatomy-hi:#3f4a3b;--anatomy-lo:#b5bdb0;--anatomy-faint:#e7e9e4}
-.iso[data-theme="dark"]{--anatomy-page:#0e0f0e;--anatomy-card:#0e0f0e;--anatomy-paper:#0e0f0e;--anatomy-faint:#242624}
-.iso-page{width:100%;margin:0;padding:0 var(--gutter) 40px}
-.site-header{display:flex;align-items:center;justify-content:space-between;gap:24px;height:64px;margin:0 calc(var(--gutter)*-1);padding:0 var(--gutter);border-bottom:1px solid var(--anatomy-faint)}
+.iso[data-theme="light"]{--anatomy-page:#fff;--anatomy-strong:#1d1f1c;--anatomy-text:#555a54;--anatomy-muted:#868b84;--anatomy-card:#fff;--anatomy-paper:#fff;--anatomy-top:#fff;--anatomy-mid:#879181;--anatomy-hi:#3f4a3b;--anatomy-lo:#b5bdb0;--anatomy-faint:#e7e9e4;--surface:#f4f5f2}
+.iso[data-theme="dark"]{--anatomy-page:#0e0f0e;--anatomy-card:#0e0f0e;--anatomy-paper:#0e0f0e;--anatomy-faint:#242624;--surface:#181a18}
+.iso-page{width:100%;margin:0;padding:0 var(--gutter) var(--gutter)}
+.site-header{display:flex;align-items:center;justify-content:space-between;gap:24px;height:64px;margin:0 calc(var(--gutter)*-1);padding:0 var(--gutter)}
 .brand{color:var(--anatomy-strong);text-decoration:none;font:500 17px var(--heading);letter-spacing:-.03em;white-space:nowrap}
 .brand span{font-weight:400;color:var(--anatomy-muted)}
 .iso-nav{display:flex;gap:24px}
 .iso-nav a{color:var(--anatomy-muted);font-size:14px;text-decoration:none}
 .iso-nav a:hover,.iso-nav a[aria-current="page"]{color:var(--anatomy-strong)}
-.page-intro{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;align-items:end;padding:56px 0 8px}
+.page-intro{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;align-items:end;padding:40px 0 8px}
 .iso-page h1{margin:0;color:var(--anatomy-strong);font:400 clamp(34px,4.4vw,56px)/1.05 var(--heading);letter-spacing:-.045em}
 .intro-copy{margin:0;max-width:46ch;justify-self:end;color:var(--anatomy-text)}
 .iso{--anatomy-weight:.85px}.iso-halo{filter:blur(10px);opacity:.16}
-.site-footer{display:flex;justify-content:space-between;gap:16px;margin:56px calc(var(--gutter)*-1) -40px;padding:18px var(--gutter);border-top:1px solid var(--anatomy-faint);font-size:13px;color:var(--anatomy-muted)}
-.site-footer a{color:inherit}
+.site-footer{display:flex;justify-content:space-between;gap:16px;margin:48px 0 0;padding:18px 22px;border-radius:var(--radius);background:var(--surface);font-size:13px;color:var(--anatomy-muted)}
+.site-footer a{color:inherit;text-decoration:none}.site-footer a:hover{color:var(--anatomy-strong)}
 a{color:inherit}button,select,input{font:inherit}button,a,select,input{touch-action:manipulation}
 :focus-visible{outline:2px solid var(--accent);outline-offset:4px}
 @media(max-width:760px){.page-intro{grid-template-columns:1fr;gap:14px;padding-top:36px}.intro-copy{justify-self:start}.iso-nav{gap:16px}.iso-nav a{font-size:13px}}
