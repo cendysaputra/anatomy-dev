@@ -171,17 +171,25 @@ function place(car){
   car.depth=depthOf([state.x,state.y,0],P);
   const [sx,sy]=iso([state.x,state.y,0],P);
   // Off-screen cars are skipped entirely.
-  car.visible=sx>view.x-30&&sx<view.x+view.width+30&&sy>view.y-30&&sy<view.y+view.height+30;
+  const edge=MARGIN/scale+30;
+  car.visible=sx>view.x-edge&&sx<view.x+view.width+edge&&sy>view.y-edge&&sy<view.y+view.height+edge;
   if(car.visible){car.x=sx;car.y=sy;car.shape=shapeAt(state.angle);}
 }
+// The canvas overhangs the stage by MARGIN on every side. While the map is being dragged the
+// canvas is not redrawn for every pointer event: it is slid along with the map (a free compositor
+// move) and redrawn at its normal pace, and the overhang hides the strip a slide would expose.
+const MARGIN=96;
+let drawn=null,settle=0;
 function draw(){
   if(!view)return;
-  const k=scale*dpr,left=-view.x*k,top=-view.y*k;
+  clearTimeout(settle);settle=0;drawn=view;canvas.style.transform='translate3d(0,0,0)';
+  const k=scale*dpr,left=MARGIN*dpr-view.x*k,top=MARGIN*dpr-view.y*k;
   ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);
   ctx.lineJoin='round';
   if(glowScale!==k){glowScale=k;glowSprites=GLOWS.map(colour=>glowSprite(colour,k));stamps.clear();}
   for(const car of cars)place(car);
-  const lit=garlands.filter(g=>g.shape.x1>view.x&&g.shape.x0<view.x+view.width&&g.shape.y1>view.y&&g.shape.y0<view.y+view.height);
+  const edge=MARGIN/scale;
+  const lit=garlands.filter(g=>g.shape.x1>view.x-edge&&g.shape.x0<view.x+view.width+edge&&g.shape.y1>view.y-edge&&g.shape.y0<view.y+view.height+edge);
   // Far to near: paint a car or a tree's lights, then cut away whatever stands in front of it.
   // Anything nearer painted later is untouched by that cut, so cars, lights and objects
   // interleave exactly as a depth sort would.
@@ -206,10 +214,16 @@ function draw(){
 }
 // Called by the camera on every move and resize, in the same task that moves the map.
 function onView(box,nextScale){
+  const zoomed=nextScale!==scale;
   view=box;scale=nextScale;dpr=Math.min(1.5,devicePixelRatio||1);
-  const w=Math.round(stage.clientWidth*dpr),h=Math.round(stage.clientHeight*dpr);
-  if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
-  draw();
+  const cssW=stage.clientWidth+MARGIN*2,cssH=stage.clientHeight+MARGIN*2,w=Math.round(cssW*dpr),h=Math.round(cssH*dpr);
+  const resized=canvas.width!==w||canvas.height!==h;
+  if(resized){canvas.width=w;canvas.height=h;canvas.style.width=cssW+'px';canvas.style.height=cssH+'px';}
+  const dx=drawn?(drawn.x-box.x)*scale:0,dy=drawn?(drawn.y-box.y)*scale:0;
+  if(resized||zoomed||!drawn||Math.abs(dx)>MARGIN||Math.abs(dy)>MARGIN){draw();return;}
+  canvas.style.transform='translate3d('+dx.toFixed(2)+'px,'+dy.toFixed(2)+'px,0)';
+  // Redraw shortly even when the frame loop is paused (reduced motion), so the slide settles.
+  if(!settle)settle=setTimeout(draw,40);
 }
 setupCamera(stage,onView);
 pauseOffscreen(stage);

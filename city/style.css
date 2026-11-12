@@ -5,7 +5,7 @@
 .park-ground{fill:var(--anatomy-shade-1)}.park-path{fill:var(--anatomy-paper)}.tree .iso-top{fill:var(--anatomy-shade-1)}.tree .iso-line{stroke-width:.4}.tree-shadow{fill:var(--anatomy-halo);opacity:.12}.water{fill:var(--anatomy-shade-1);stroke:var(--anatomy-lo);stroke-width:.5}.street-light .iso-line{stroke:var(--anatomy-mid)}.street-light .iso-top{fill:var(--anatomy-top)}
 .city-car{--car-top:var(--anatomy-mid);--car-side:var(--anatomy-text);--car-roof:var(--anatomy-lo)}.car-1{--car-top:var(--anatomy-top);--car-side:var(--anatomy-lo);--car-roof:var(--anatomy-paper)}.car-2{--car-top:var(--anatomy-lo);--car-side:var(--anatomy-mid);--car-roof:var(--anatomy-shade-0)}.car-3{--car-top:var(--anatomy-shade-1);--car-side:var(--anatomy-lo);--car-roof:var(--anatomy-top)}.car-4{--car-top:var(--anatomy-text);--car-side:var(--anatomy-hi);--car-roof:var(--anatomy-mid)}
 /* Cars are painted on a canvas (see app.mjs), which reads the --car-* colours above. */
-.city-cars{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.city-cars{position:absolute;top:-96px;left:-96px;pointer-events:none;will-change:transform}
 .city-caption{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:0 12px 20px;color:var(--anatomy-muted);font-size:12px}.city-live{display:flex;gap:7px;align-items:center}.city-live:before{content:'';height:5px;width:5px;border-radius:50%;background:var(--anatomy-mid)}
  .city-stage.is-dragging{cursor:grabbing}.city-stage:focus-visible{outline:1px solid var(--anatomy-lo);outline-offset:3px}
 @media(max-width:760px){.city-caption{padding:0;font-size:11px}}
