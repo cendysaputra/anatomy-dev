@@ -1,4 +1,5 @@
 import {setupCamera} from './controls.mjs';
+import {snow} from './snow.mjs';
 import {iso,extrude,roundedPlan,depthOf} from '../kit/iso-kit.mjs';
 import {cityTraffic,sample} from './routes.mjs';
 const P=JSON.parse(document.querySelector('#city-config').textContent).projection;
@@ -55,3 +56,4 @@ document.addEventListener('visibilitychange',run);
 reduced.addEventListener('change',()=>{if(reduced.matches){cancelAnimationFrame(frame);frame=0;last=0;}else run();});
 render(0);run();
 setupCamera(document.querySelector('.city-stage'));
+snow(document.querySelector('.city-stage'));
