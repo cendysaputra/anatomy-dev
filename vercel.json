@@ -15,6 +15,10 @@
     {
       "source": "/load-balancer/dark",
       "destination": "/load-balancer/dark.html"
+    },
+    {
+      "source": "/cache",
+      "destination": "/cache/index.html"
     }
   ]
 }

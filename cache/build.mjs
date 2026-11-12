@@ -2,7 +2,7 @@ import {writeFileSync} from 'node:fs';
 import * as k from '../kit/iso-kit.mjs';
 import {chromeCss,chromeHtml,footerHtml} from '../scripts/chrome.mjs';
 const base={x:-175,y:-102,w:365,d:205,r:10};
-const P=k.fitProjection(k.boxCorners(base,-6,65),920,420,{pad:32,azimuth:68,elevation:30});
+const P=k.fitProjection([...k.boxCorners(base,-6,0),[-132,0,48],[-30,0,54],[90,-60,38],[132,60,54]],920,360,{pad:30,azimuth:68,elevation:30});
 const at=p=>k.iso(p,P),S=p=>k.solidSvg(p,{tone:'mid',crease:'lo'});
 const slab=(x,y,w,d,z,h)=>S(k.slabOf({x,y,w,d,r:2},z,h,P,5,.5));
 const line=(ps,tone='lo')=>k.lineSvg(k.pathOf(ps.map(at)),{tone});
@@ -15,10 +15,10 @@ let cache=slab(65,-79,48,38,0,4)+slab(70,-75,38,30,4,12);
 for(let i=0;i<6;i++)cache+=slab(69+i*6,-80,2,5,5,2)+slab(69+i*6,-45,2,5,5,2);
 for(let i=0;i<2;i++)cache+=`<g data-slot="${i}" class="cache-slot">${slab(76+i*14,-70,10,20,16,2)}</g>`;
 let db='';for(let i=0;i<3;i++)db+=S(k.cylinder(132,60,21,i*12,11,P,48,.5));
-const svg=k.figureSvg({width:920,height:420,label:'Client mengirim request ke aplikasi. Aplikasi memeriksa cache; saat miss, data diambil dari database lalu salinannya disimpan di cache.',body:[
+const svg=k.figureSvg({width:920,height:360,label:'Client mengirim request ke aplikasi. Aplikasi memeriksa cache; saat miss, data diambil dari database lalu salinannya disimpan di cache.',body:[
  `<path class="iso-halo" d="${k.haloOf(base,-6,6,P)}"/>`,S(k.slabOf(base,-6,6,P,6,.6)),
  ...routes.map((p,i)=>`<path id="path-${i}" d="${k.pathOf(p.map(at))}" class="route"/>`),
- client,label([-132,0,48],'Client','request'),app,label([-30,0,44],'Aplikasi','cek & ambil data'),cache,label([90,-60,38],'Cache','salinan sementara'),db,label([132,60,54],'Database','sumber data'),
+ client,label([-132,0,48],'Client','request'),app,label([-30,0,54],'Aplikasi','cek & ambil data'),cache,label([90,-60,38],'Cache','salinan sementara'),db,label([132,60,54],'Database','sumber data'),
  '<circle id="packet" r="5" hidden/><circle id="signal" r="9" hidden/>'
 ]});
 const body=`<style>${chromeCss()}</style><link rel="stylesheet" href="/cache/style.css">${chromeHtml({active:'cache'})}<section class="cache-demo" aria-label="Simulasi cache"><div class="cache-figure">${svg}</div><div class="cache-controls"><label for="key">Data <select id="key"><option value="A">Produk A</option><option value="B">Produk B</option></select></label><button id="request" class="cache-button">Kirim request</button><button id="clear" class="cache-button quiet">Kosongkan cache</button></div><p class="cache-status" id="status" role="status">Kirim request dua kali untuk melihat bedanya.</p><div class="cache-state"><span>Isi cache: <output id="contents">kosong</output></span><span id="result">Belum ada request</span></div></section><div class="cache-explanation"><p><strong>Miss:</strong> data belum ada, aplikasi mengambilnya dari database lalu menyimpan salinan di cache. <strong>Hit:</strong> request berikutnya memakai salinan itu tanpa membaca database lagi.</p><p class="cache-note">Contoh pola cache-aside. Cache di sini bertahan sampai dikosongkan; sistem nyata juga memakai masa berlaku (TTL) atau invalidasi agar data tetap relevan.</p></div>${footerHtml()}`;

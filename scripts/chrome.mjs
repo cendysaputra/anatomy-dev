@@ -25,13 +25,15 @@ body.iso{font:400 16px/1.65 var(--body)}
 a{color:inherit}button,select,input{font:inherit}button,a,select,input{touch-action:manipulation}
 :focus-visible{outline:2px solid var(--accent);outline-offset:4px}
 @media(max-width:900px){.iso-page{display:block;padding:12px var(--gutter) var(--gutter)}.site-header{position:static;height:auto;flex-direction:row;align-items:center;justify-content:space-between;gap:12px;padding:8px 8px 8px 4px}.iso-nav{flex-direction:row}.nav-title,.side-foot{display:none}.iso-nav a{padding:7px 10px;font-size:13px}}
+@media(max-width:480px){.site-header{flex-wrap:wrap;row-gap:8px}.iso-nav{flex-wrap:wrap}.iso-nav a{font-size:12px;padding:7px 8px}}
 @media(max-width:760px){.page-intro{grid-template-columns:1fr;gap:14px;padding-top:28px}.intro-copy{justify-self:start}}
 `;
 }
 export function chromeHtml({ active, theme = 'light' }) {
-  const hrefs = theme === 'dark' ? { hill:'/dark', lb:'/load-balancer/dark' } : { hill:'/', lb:'/load-balancer' };
+  const hrefs = theme === 'dark' ? { hill:'/dark', lb:'/load-balancer/dark', cache:'/cache' } : { hill:'/', lb:'/load-balancer', cache:'/cache' };
   const link=(id,label)=>`<a href="${hrefs[id]}"${active===id?' aria-current="page"':''}>${label}</a>`;
   const lb=active==='lb';
-  return `<header class="site-header"><a class="brand" href="/" aria-label="Anatomy Dev beranda">anatomy<span> / dev</span></a><nav class="iso-nav" aria-label="Pilih ilustrasi"><p class="nav-title">Ilustrasi</p>${link('hill','Hill climbing')}${link('lb','Load balancing')}</nav><p class="side-foot"><a href="https://github.com/wheresryan22/anatomy" target="_blank" rel="noreferrer">Dibuat dengan Anatomy ↗</a></p></header><section class="page-intro"><h1>${lb?'Load balancing':'Hill climbing'}</h1><p class="intro-copy">${lb?'Satu alamat di depan, beberapa server di belakang. Pilih cara membagi request, lalu matikan satu server dan lihat apa yang terjadi.':'Dari posisi sekarang, lihat kiri dan kanan, lalu naik ke yang lebih tinggi. Ulangi sampai tidak ada lagi yang lebih tinggi, entah itu puncak tertinggi atau bukan.'}</p></section>`;
+  const isCache=active==='cache';
+  return `<header class="site-header"><a class="brand" href="/" aria-label="Anatomy Dev beranda">anatomy<span> / dev</span></a><nav class="iso-nav" aria-label="Pilih ilustrasi"><p class="nav-title">Ilustrasi</p>${link('hill','Hill climbing')}${link('lb','Load balancing')}${link('cache','Cache')}</nav><p class="side-foot"><a href="https://github.com/wheresryan22/anatomy" target="_blank" rel="noreferrer">Dibuat dengan Anatomy ↗</a></p></header><section class="page-intro"><h1>${isCache?'Cache':lb?'Load balancing':'Hill climbing'}</h1><p class="intro-copy">${isCache?'Simpan sekali, ambil lebih cepat. Ikuti perjalanan data saat cache masih kosong dan saat sudah terisi.':lb?'Satu alamat di depan, beberapa server di belakang. Pilih cara membagi request, lalu matikan satu server dan lihat apa yang terjadi.':'Dari posisi sekarang, lihat kiri dan kanan, lalu naik ke yang lebih tinggi. Ulangi sampai tidak ada lagi yang lebih tinggi, entah itu puncak tertinggi atau bukan.'}</p></section>`;
 }
 export function footerHtml(){return `<footer class="site-footer" aria-hidden="true"></footer>`;}
