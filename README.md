@@ -8,6 +8,7 @@ Interactive visual explanations built with the [Anatomy](https://github.com/wher
 | --- | --- | --- |
 | Hill climbing | `/` | `/dark` |
 | Load balancing | `/load-balancer` | `/load-balancer/dark` |
+| Cache | `/cache` | White canvas |
 
 ### Load balancer
 
@@ -19,6 +20,12 @@ This is an educational model: one request per connection, immediate health detec
 
 Reference: [NGINX HTTP load balancing](https://nginx.org/en/docs/http/load_balancing.html).
 
+### Cache
+
+A compact cache-aside illustration: choose Product A or B, request it twice to compare a miss with a hit, and clear the cache to try again. The application reads the database only on a miss, stores a copy, and returns cached data on subsequent reads. Entries last until cleared; no TTL is simulated.
+
+Reference: [Microsoft cache-aside pattern](https://learn.microsoft.com/en-us/azure/architecture/patterns/cache-aside).
+
 ## Development
 
 The readable source is `load-balancer/build.mjs`, `load-balancer/app.mjs`, `load-balancer/model.mjs`, and `load-balancer/style.css`. Shared layout and typography live in `scripts/chrome.mjs`. Titles use IBM Plex Sans, and body text uses Manrope at 16px. Fonts are loaded through Google Fonts with system fallbacks.
@@ -28,6 +35,7 @@ node hill-climbing/build.mjs
 node hill-climbing/build.mjs --light
 node load-balancer/build.mjs
 node load-balancer/build.mjs --dark
+node cache/build.mjs
 node --test load-balancer/model.test.mjs
 ```
 
