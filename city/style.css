@@ -23,3 +23,9 @@ body:has(.city-stage) .iso-page{min-height:0;padding-bottom:0}
 /* The camera moves the drawn city with a transform (see controls.mjs). */
 .city-stage .iso-svg{position:absolute;top:0;left:0;width:auto;height:auto;max-width:none;transform-origin:0 0;will-change:transform}
 body:has(.city-stage) .site-header{user-select:none}
+/* Christmas: pines in the parks, a big decorated tree at each park centre. */
+.pine{--anatomy-paper:#3f6f48;--anatomy-top:#5d8c62;--anatomy-shade-0:#2c5435;--anatomy-shade-1:#33603d;--anatomy-shade-2:#3a6a44;--anatomy-shade-3:#41744b;--anatomy-lo:#2a4d31;--anatomy-faint:#2a4d31}
+.pine-trunk{--anatomy-paper:#7a5a40;--anatomy-top:#8a6a4c;--anatomy-shade-0:#5c4330;--anatomy-shade-1:#654a35;--anatomy-shade-2:#6e513a;--anatomy-shade-3:#775840;--anatomy-lo:#4e3828}
+.bauble circle{stroke:#fff;stroke-width:.4}.bauble-0 circle{fill:#c8372d}.bauble-1 circle{fill:#e2b53e}.bauble-2 circle{fill:#f4f1ea}
+.xmas-star{fill:#f2c94c;stroke:#b8891b;stroke-width:.5;stroke-linejoin:round}
+.cone-side{fill:#4f8256}.cone-shade{fill:#36633d}.cone-edge{fill:none;stroke:#2a4d31;stroke-width:.45;stroke-linejoin:round}

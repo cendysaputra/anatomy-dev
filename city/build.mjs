@@ -14,6 +14,36 @@ const line=(points,style={})=>k.lineSvg(k.pathOf(points.map(at)),style);
 const objects=[];let buildings=0,trees=0;
 function add(x,y,body,kind='detail'){objects.push({depth:k.depthOf([x,y,0],P),body,kind});}
 function tree(x,y,size=1){trees++;const trunk=S(k.cylinder(x,y,.85*size,1,4*size,P,8));const canopy=S(k.cylinder(x,y,4.3*size,4*size,4*size,P,12))+S(k.cylinder(x,y,3.5*size,8*size,2.2*size,P,12));add(x,y,`<path class="tree-shadow" d="${top(plan(x-3+3*size,y-3+3*size,7*size,7*size,3))}"/><g class="tree">${trunk}${canopy}</g>`,'tree');}
+// A cone in the iso camera: its silhouette is the hull of the apex and the base circle;
+// the half facing away from the light gets a darker tone.
+function hull(pts){pts=[...pts].sort((a,b)=>a[0]-b[0]||a[1]-b[1]);const cross=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]);const lo=[],up=[];for(const p of pts){while(lo.length>1&&cross(lo.at(-2),lo.at(-1),p)<=0)lo.pop();lo.push(p);}for(const p of pts.reverse()){while(up.length>1&&cross(up.at(-2),up.at(-1),p)<=0)up.pop();up.push(p);}return lo.slice(0,-1).concat(up.slice(0,-1));}
+const poly=pts=>'M'+pts.map(([a,b])=>a.toFixed(1)+' '+b.toFixed(1)).join('L')+'Z';
+function cone(x,y,r,z0,h){
+ const ring=Array.from({length:28},(_,i)=>{const a=i/28*Math.PI*2;return [x+Math.cos(a)*r,y+Math.sin(a)*r];});
+ const apex=at([x,y,z0+h]),base=ring.map(([px,py])=>at([px,py,z0]));
+ const c=k.depthOf([x,y,0],P),front=ring.map(([px,py],i)=>k.depthOf([px,py,0],P)>c?base[i]:null).filter(Boolean);
+ const shade=front.filter(p=>p[0]>=apex[0]).sort((a,b)=>a[0]-b[0]);
+ return `<path class="cone-side" d="${poly(hull([apex,...base]))}"/>${shade.length>1?`<path class="cone-shade" d="${poly([apex,...shade])}"/>`:''}<path class="cone-edge" d="${poly(hull([apex,...base]))}"/>`;
+}
+// A pine for the Christmas parks; the big one at the centre carries baubles and a star.
+function pine(x,y,size=1,big=false){
+ trees++;
+ let body=`<g class="pine-trunk">${S(k.cylinder(x,y,1.1*size,1,3*size,P,10))}</g><g class="pine">`;
+ const tiers=3;let z=2.5*size,r=(big?8:4.4)*size,h=(big?11:6.5)*size;
+ const baubles=[];
+ for(let t=0;t<tiers;t++){
+   body+=cone(x,y,r,z,h);
+   if(big)for(let a=0;a<12;a++){const ang=a/12*Math.PI*2+t*.5,f=.55,px=x+Math.cos(ang)*r*f,py=y+Math.sin(ang)*r*f;if(k.depthOf([px,py,0],P)>k.depthOf([x,y,0],P)+r*f*.3)baubles.push([px,py,z+h*(1-f)*.95,(a+t)%3]);}
+   z+=h*.42;r*=.74;h*=.8;
+ }
+ const topZ=z-h*.42/.8*.8+h/.8;
+ body+='</g>';
+ if(big){
+   for(const tone of [0,1,2]){const pts=baubles.filter(b=>b[3]===tone).map(b=>at([b[0],b[1],b[2]]));body+=`<g class="bauble bauble-${tone}">${pts.map(([px,py])=>`<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="1.4"/>`).join('')}</g>`;}
+   const [sx,sy]=at([x,y,topZ+.5]);body+=`<path class="xmas-star" d="M${sx} ${sy-4.2}L${sx+1.2} ${sy-1.3}L${sx+4} ${sy-1.2}L${sx+1.8} ${sy+.7}L${sx+2.6} ${sy+3.6}L${sx} ${sy+1.9}L${sx-2.6} ${sy+3.6}L${sx-1.8} ${sy+.7}L${sx-4} ${sy-1.2}L${sx-1.2} ${sy-1.3}Z"/>`;
+ }
+ add(x,y,`<path class="tree-shadow" d="${top(plan(x-2*size,y-2*size,(big?14:8)*size,(big?14:8)*size,4))}"/>${body}`,'tree');
+}
 function building(x,y,w,d,h,seed){
  buildings++;
  const shell=plan(x,y,w,d,1.1),setback=seed%4===0;
@@ -55,8 +85,8 @@ for(let row=0;row<BLOCKS;row++)for(let col=0;col<BLOCKS;col++){
  ground.push(`<g class="sidewalk">${slab(plan(x-2,y-2,74,74,4),.2,.8)}</g>`);
  if(PARKS.has(row+','+col)){
    ground.push(`<path class="park-ground" d="${top(plan(x+2,y+2,66,66,3),1.05)}"/><path class="park-path" d="${top(plan(cx-3,y+2,6,66,0),1.1)+top(plan(x+2,cy-3,66,6,0),1.1)}"/>`);
-   add(cx,cy,`<g class="fountain">${S(k.cylinder(cx,cy,10,1.2,1.7,P,32))}<path class="water" d="${k.ring(cx,cy,8.4,3,P,32)}"/>${S(k.cylinder(cx,cy,2.5,3,2,P,16))}</g>`);
-   for(const dx of [-22,22])for(const dy of [-22,22])tree(cx+dx,cy+dy,1.2);
+   pine(cx,cy,1.5,true);
+   for(const dx of [-22,22])for(const dy of [-22,22])pine(cx+dx,cy+dy,1.2);
    for(const [dx,dy] of [[-20,2],[20,-2]])add(cx+dx,cy+dy,slab(plan(cx+dx-4,cy+dy-1,8,2,0),1,2));
  }else{
    for(let a=0;a<2;a++)for(let b=0;b<2;b++){
