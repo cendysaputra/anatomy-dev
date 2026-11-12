@@ -4,6 +4,7 @@ import {cityMap} from './map.mjs';
 import {onFrame,pauseOffscreen} from './frames.mjs';
 import {iso,extrude,roundedPlan,depthOf} from '../kit/iso-kit.mjs';
 import {cityTraffic,sample} from './routes.mjs';
+import {attachCityMusic} from './music.mjs';
 // Scene data is built ahead of time (see build.mjs): the projection, and for every object its
 // depth, bounds and the outlines that can hide a car.
 const scene=await (await fetch('/city/props.json')).json();
@@ -242,3 +243,4 @@ function setMenu(open,remember){
 let saved=null;try{saved=localStorage.getItem('city-menu');}catch{}
 setMenu(saved==='open',false);
 toggle.addEventListener('click',()=>setMenu(menu.classList.contains('is-min'),true));
+attachCityMusic(document.querySelector('.music-toggle'));
