@@ -10,7 +10,7 @@ Interactive visual explanations built with the [Anatomy](https://github.com/wher
 | Load balancing | `/load-balancer` | `/load-balancer/dark` |
 | Cache | `/cache` | White canvas |
 | CDN | `/cdn` | White canvas |
-| City | `/city` | White canvas |
+| City | `/city` | Night scene |
 
 ### Load balancer
 
@@ -36,7 +36,7 @@ Reference: [Cloudflare CDN overview](https://www.cloudflare.com/learning/cdn/wha
 
 ### City
 
-An Anatomy miniature city viewed at the same 30-degree isometric elevation as the other Anatomy illustrations, with inherited neutral tones: 56 varied buildings, two parks, a two-way street grid and 32 cars. The view opens at 220% zoom; use wheel/pinch or the zoom buttons to move closer/further, drag to pan, or fit the entire city. Keyboard: +/−, arrows, and 0/Home. Animation starts automatically with no playback buttons. Cars follow tangent-continuous rounded loops around the city blocks. They are drawn on a canvas above the static SVG map, and each car is cut away behind every nearer building, so occlusion remains correct while the map itself is rasterised only once. Cars and snow share one animation loop capped at 60 frames per second. Settled snow on roofs, trees, parks, kerbs and car roofs is part of the built SVG and the car shapes; falling snow drifts with a slowly changing breeze in three depths. The animation pauses off-screen and respects the device’s reduced-motion setting. This is a visual city scene, not a traffic simulation.
+An Anatomy miniature city viewed at the same 30-degree isometric elevation as the other Anatomy illustrations, with inherited neutral tones: 56 varied buildings, two parks, a two-way street grid and 32 cars. The view opens at 220% zoom; use wheel/pinch or the zoom buttons to move closer/further, drag to pan, or fit the entire city. Keyboard: +/−, arrows, and 0/Home. Animation starts automatically with no playback buttons. Cars follow tangent-continuous rounded loops around the city blocks. They are drawn on a canvas above the static SVG map, and each car is cut away behind every nearer building, so occlusion remains correct while the map itself is rasterised only once. Cars and snow share one animation loop capped at 60 frames per second. Settled snow on roofs, trees, parks, kerbs and car roofs is part of the built SVG and the car shapes; falling snow drifts with a slowly changing breeze in three depths. The scene is set on Christmas night: a midnight-blue palette, warm lit windows, fairy lights under roof edges, glowing street lamps, car headlight beams, and Christmas-tree lights that twinkle on the car canvas so the map itself still never repaints. The animation pauses off-screen and respects the device’s reduced-motion setting. This is a visual city scene, not a traffic simulation.
 
 ## Development
 

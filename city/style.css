@@ -37,3 +37,27 @@ body:has(.city-stage) .site-header{user-select:none}
 .city-stage{--snow:#fff;--snow-shade:#c5d5e6}
 .snow-top{fill:var(--snow);stroke:var(--snow-shade);stroke-width:.4;stroke-linejoin:round}.snow-side{fill:var(--snow-shade)}
 .snow-ground{stroke-width:.3}.snowcone-side{fill:#f8fbfe}.snowcone-shade{fill:#cddbea}
+/* Christmas night. The page chrome goes midnight blue; the map trades its daylight greys for
+   moonlit blues, and everything that shines is a plain fill or stroke (no filters), so the static
+   map is still rasterised only once. */
+body.iso:has(.city-stage){--anatomy-page:#070c18;--surface:rgba(16,23,40,.94);--anatomy-strong:#f3f6fb;--anatomy-text:#b9c4d6;--anatomy-muted:#8492aa}
+.city-stage{background:#070c18;--anatomy-paper:#243049;--anatomy-top:#34425f;--anatomy-shade-0:#18213a;--anatomy-shade-1:#1e2843;--anatomy-shade-2:#25304d;--anatomy-shade-3:#2c3857;--anatomy-lo:#43527a;--anatomy-mid:#566892;--anatomy-hi:#9aabcf;--anatomy-faint:#2a3554;--anatomy-text:#0d1424;--anatomy-halo:#00040c;--snow:#dfe9f8;--snow-shade:#8196ba;--car-beam:#ffe6a3}
+.city-ground{fill:#0f1627}.road{fill:#161e33}.road-stripes{stroke:#7f8fb1;opacity:.7}.crosswalk{fill:#8d9cbd;opacity:.55}
+.sidewalk{--anatomy-top:#8b9dbd;--anatomy-lo:#5d6f95}.park-ground{fill:#9eb0cd}.park-path{fill:#5b6c8f}
+.building-shadow{opacity:.35}.tree-shadow{opacity:.3}.city-base-shadow{opacity:.5}
+.tree{--anatomy-paper:#1f4030;--anatomy-top:#2b553d;--anatomy-shade-0:#16301f;--anatomy-shade-1:#1b3a27;--anatomy-shade-2:#21442e;--anatomy-shade-3:#274e35;--anatomy-lo:#122819}.tree .iso-top{fill:#2b553d}
+.pine{--anatomy-lo:#17301d}.cone-side{fill:#356b45}.cone-shade{fill:#234a2f}.cone-edge{stroke:#17301d}
+.snowcone-side{fill:#dfe9f8}.snowcone-shade{fill:#93a7c9}
+.roof-machine .iso-top{fill:#3d4c6c}.solar>path{fill:#101829}.solar .iso-line{stroke:#3d5a8f}
+/* Windows: the dark ones barely show, the lit ones glow warm (a wide faint stroke under a crisp one). */
+.building-windows{stroke:#34415f;opacity:1}.building-windows.window-lit{stroke:#ffd98a}
+.window-glow{fill:none;stroke:#ffb347;stroke-width:4.5;stroke-linecap:round;opacity:.16}
+.fairy,.fairy-glow{fill:none;stroke-linecap:round}.fairy{stroke-width:2.1}.fairy-glow{stroke:#fff2c9;stroke-width:5.5;opacity:.2}
+.fairy-0{stroke:#ff5b4d}.fairy-1{stroke:#ffd35a}.fairy-2{stroke:#58d68d}.fairy-3{stroke:#6db7ff}
+.street-light .iso-top{fill:#fff3c4}.street-light .iso-solid{--anatomy-paper:#ffe9a8;--anatomy-shade-0:#f3cf74;--anatomy-shade-1:#f7d785;--anatomy-shade-2:#fbe096;--anatomy-shade-3:#ffe9a8;--anatomy-mid:#d9b256;--anatomy-lo:#d9b256}
+.lamp-pool path{fill:url(#lamp-pool)}.lamp-halo{fill:url(#lamp-halo);stroke:none}
+.bauble circle{stroke:none}.bauble-0 circle{fill:#ff5b4d}.bauble-1 circle{fill:#ffd35a}.bauble-2 circle{fill:#fff6dc}
+.xmas-star{fill:#ffe27a;stroke:#f0b429}
+/* Cars at night: darker bodies so the snow, headlights and tail lights stand out. */
+.city-car{--car-top:#5b6a8c;--car-side:#3a4664;--car-roof:#6c7ca0}.car-1{--car-top:#c9d3e6;--car-side:#8f9dba;--car-roof:#e2e9f5}.car-3{--car-top:#2c3650;--car-side:#1b2338;--car-roof:#3a4664}
+.car-2{--car-top:#c8372d;--car-side:#8f241c;--car-roof:#e2564b}.car-4{--car-top:#3f7a4a;--car-side:#28532f;--car-roof:#5d9466}

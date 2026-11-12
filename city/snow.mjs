@@ -7,15 +7,15 @@ export function snow(stage){
   const ctx=canvas.getContext('2d');if(!ctx)return;
   let w=0,h=0,dpr=1,flakes=[],sprites=[],time=0;
   // Three depths of flake: small, faint and slow far away; large, bright and fast up close.
-  // Each is drawn once as a soft dot (white core, blue-grey rim so it shows on white roofs and
-  // grey roads alike) and then stamped as an image, which is far cheaper than filling circles.
+  // Each is drawn once as a soft dot (white core fading to a pale blue haze against the night)
+  // and then stamped as an image, which is far cheaper than filling circles.
   const DEPTHS=[{radius:1.7,alpha:.6},{radius:2.7,alpha:.82},{radius:4.2,alpha:1}];
   function sprite({radius,alpha}){
     const half=radius+1,image=document.createElement('canvas');image.width=image.height=Math.ceil(half*2*dpr);
     const g=image.getContext('2d');g.scale(dpr,dpr);
     const glow=g.createRadialGradient(half,half,0,half,half,radius);
     glow.addColorStop(0,'rgba(255,255,255,1)');glow.addColorStop(.42,'rgba(255,255,255,.96)');
-    glow.addColorStop(.72,'rgba(170,190,212,.78)');glow.addColorStop(1,'rgba(170,190,212,0)');
+    glow.addColorStop(.72,'rgba(214,228,246,.5)');glow.addColorStop(1,'rgba(214,228,246,0)');
     g.globalAlpha=alpha;g.fillStyle=glow;g.beginPath();g.arc(half,half,radius,0,Math.PI*2);g.fill();
     return {image,radius,half};
   }

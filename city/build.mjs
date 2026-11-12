@@ -30,7 +30,7 @@ function drifted(p,seed,wobble=1.3){
 function heap(cx,cy,rx,ry,seed,scale=1){const next=seeded(seed);return Array.from({length:12},(_,i)=>{const a=i/12*Math.PI*2,f=(.72+next()*.28)*scale;return [cx+Math.cos(a)*rx*f,cy+Math.sin(a)*ry*f];});}
 // A snow sheet with visible thickness: its lower outline in shade, its top in white.
 const snowSheet=(p,z,seed,depth=.7)=>{const ring=drifted(p,seed);return `<path class="snow-side snow-cut" d="${flat(ring,z)}"/><path class="snow-top snow-cut" d="${flat(ring,z+depth)}"/>`;};
-let snowSides='',snowTops='';
+let snowSides='',snowTops='',lampPools='';
 function snowHeap(cx,cy,rx,ry,seed,height=.6){snowSides+=flat(heap(cx,cy,rx,ry,seed),.25);snowTops+=flat(heap(cx,cy,rx,ry,seed,height?.8:1),.25+height);}
 function cone(x,y,r,z0,h,kind='cone'){
  const ring=Array.from({length:28},(_,i)=>{const a=i/28*Math.PI*2;return [x+Math.cos(a)*r,y+Math.sin(a)*r];});
@@ -66,12 +66,21 @@ function building(x,y,w,d,h,seed){
  out+=slab(shell,1,setback?5:h);
  const tower=setback?plan(x+2.5,y+2.5,w-5,d-5,1):shell;
  if(setback)out+=snowSheet(k.insetPlan({...shell,r:3},.6),6,seed*3+1,.5)+slab(tower,6,h-5);
- let windows='';
+ let lit='',dark='';const glowing=seeded(seed+900);
+ const pane=d=>{if(glowing()<.52)lit+=d;else dark+=d;};
  for(let z=6;z<h-2;z+=5){
-   for(let q=3;q<tower.w-2;q+=5)windows+=k.pathOf([at([tower.x+q,tower.y+tower.d,z]),at([Math.min(tower.x+q+2.6,tower.x+tower.w-2),tower.y+tower.d,z])]);
-   for(let q=3;q<tower.d-2;q+=5)windows+=k.pathOf([at([tower.x+tower.w,tower.y+q,z]),at([tower.x+tower.w,Math.min(tower.y+q+2.6,tower.y+tower.d-2),z])]);
+   for(let q=3;q<tower.w-2;q+=5)pane(k.pathOf([at([tower.x+q,tower.y+tower.d,z]),at([Math.min(tower.x+q+2.6,tower.x+tower.w-2),tower.y+tower.d,z])]));
+   for(let q=3;q<tower.d-2;q+=5)pane(k.pathOf([at([tower.x+tower.w,tower.y+q,z]),at([tower.x+tower.w,Math.min(tower.y+q+2.6,tower.y+tower.d-2),z])]));
  }
- out+=`<path class="building-windows" d="${windows}"/>`;
+ out+=`<path class="building-windows" d="${dark}"/><path class="window-glow" d="${lit}"/><path class="building-windows window-lit" d="${lit}"/>`;
+ // Fairy lights strung under the roof edge of every other building, on the two faces we can see.
+ if(seed%2===0){
+   const bulbs=['','','',''];let n=seed;
+   const bulb=(x,y)=>{const [px,py]=at([x,y,h+.1]);bulbs[n++%4]+='M'+px.toFixed(1)+' '+py.toFixed(1)+'l0 0';};
+   for(let q=1.5;q<=tower.w-1.5;q+=3)bulb(tower.x+q,tower.y+tower.d);
+   for(let q=tower.d-3;q>=1.5;q-=3)bulb(tower.x+tower.w,tower.y+q);
+   out+=`<path class="fairy-glow" d="${bulbs.join('')}"/>`+bulbs.map((d,i)=>`<path class="fairy fairy-${i}" d="${d}"/>`).join('');
+ }
  out+=snowSheet(k.insetPlan({...tower,r:3.5},.7),h+1,seed*3+2);
  if(seed%3===0){out+=`<g class="roof-machine">${slab(plan(tower.x+3,tower.y+3,5,7,1),h+1,2.2)}</g>`;out+=line([[tower.x+4,tower.y+5,h+3.2],[tower.x+7,tower.y+5,h+3.2]],{tone:'lo'});}
  else if(seed%3===1){out+=`<g class="solar"><path d="${top(plan(tower.x+3,tower.y+3,8,10,.2),h+1.2)}"/>${line([[tower.x+7,tower.y+3,h+1.3],[tower.x+7,tower.y+13,h+1.3]],{tone:'faint'})}</g>`;}
@@ -120,16 +129,20 @@ for(let row=0;row<BLOCKS;row++)for(let col=0;col<BLOCKS;col++){
     if(side<2)snowHeap(bx+t,by+off,length,1.6,seed*40+side*4+n);else snowHeap(bx+off,by+t,1.6,length,seed*40+side*4+n);
   }}
  // A slim street light on every block, set back from the carriageway.
- const lx=x+35,ly=y-1;add(lx,ly,`<g class="street-light">${line([[lx,ly,1],[lx,ly,8],[lx,ly-3,8]],{tone:'mid'})}${S(k.cylinder(lx,ly-3,1.3,8,.65,P,10))}</g>`);
+ const lx=x+35,ly=y-1,[hx,hy]=at([lx,ly-3,8.3]);
+ lampPools+=`<path d="${flat(k.circleRing(lx,ly-4,15,20),.3)}"/>`;
+ add(lx,ly,`<g class="street-light">${line([[lx,ly,1],[lx,ly,8],[lx,ly-3,8]],{tone:'mid'})}${S(k.cylinder(lx,ly-3,1.3,8,.65,P,10))}<circle class="lamp-halo" cx="${hx.toFixed(1)}" cy="${hy.toFixed(1)}" r="7"/></g>`);
 }
 // An outer planted verge gives the road network a clean model edge.
 for(const p of GRID.slice(0,-1).map(g=>g+38)){tree(-HALF+6,p,.8);tree(HALF-6,p,.8);tree(p,-HALF+6,.8);tree(p,HALF-6,.8);}
-ground.push(`<path class="snow-side" d="${snowSides}"/><path class="snow-top snow-ground" d="${snowTops}"/>`);
+ground.push(`<path class="snow-side" d="${snowSides}"/><path class="snow-top snow-ground" d="${snowTops}"/><g class="lamp-pool">${lampPools}</g>`);
+const glow=(id,colour,stops)=>`<radialGradient id="${id}">${stops.map(([at,alpha])=>`<stop offset="${at}" stop-color="${colour}" stop-opacity="${alpha}"/>`).join('')}</radialGradient>`;
+const defs=`<defs>${glow('lamp-pool','#ffd98a',[[0,.42],[.45,.2],[1,0]])}${glow('lamp-halo','#ffe7ad',[[0,.95],[.25,.55],[1,0]])}</defs>`;
 objects.sort((a,b)=>a.depth-b.depth);
 const traffic=cityTraffic();
-const fig=k.figureSvg({width:W,height:H,label:`Miniatur kota isometrik berisi ${buildings} gedung, taman, jalan dua arah, dan ${traffic.cars.length} mobil yang bergerak otomatis dalam lintasan looping.`,body:[...ground,`<g id="city-scene">${objects.map((o,i)=>`<g data-city-object="${i}" data-depth="${o.depth.toFixed(6)}" data-kind="${o.kind}">${o.body}</g>`).join('')}</g>`]});
+const fig=k.figureSvg({width:W,height:H,label:`Miniatur kota isometrik berisi ${buildings} gedung, taman, jalan dua arah, dan ${traffic.cars.length} mobil yang bergerak otomatis dalam lintasan looping.`,body:[defs,...ground,`<g id="city-scene">${objects.map((o,i)=>`<g data-city-object="${i}" data-depth="${o.depth.toFixed(6)}" data-kind="${o.kind}">${o.body}</g>`).join('')}</g>`]});
 const body=`<style>${chromeCss()}</style><link rel="stylesheet" href="/city/style.css">${chromeHtml({active:'city'})}<figure class="city-figure"><div class="city-stage" tabindex="0" role="region" aria-label="Peta kota: seret atau pakai tombol panah untuk bergeser">${fig}</div></figure><script id="city-config" type="application/json">${JSON.stringify({projection:P,buildings,cars:traffic.cars.length})}</script>${footerHtml()}`;
-let html=k.pageHtml({title:'City',theme:'light',width:1280,body});
+let html=k.pageHtml({title:'City',theme:'dark',width:1280,body});
 html=html.replace('<html lang="en">','<html lang="id">').replace('</head>','<meta name="description" content="Miniatur kota dengan sudut isometrik Anatomy, dengan puluhan gedung dan mobil yang bergerak looping otomatis."></head>').replace('</body>','<script type="module" src="/city/app.mjs"></script></body>');
 // Path data is rewritten with relative segments: identical geometry at one-decimal precision,
 // about a quarter fewer bytes of HTML to download and parse. Paths with finer numbers are left alone.

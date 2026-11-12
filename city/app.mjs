@@ -13,7 +13,7 @@ stage.append(canvas);
 const ctx=canvas.getContext('2d');
 // Paint comes from the same CSS custom properties the SVG cars used.
 const token=(node,name)=>getComputedStyle(node).getPropertyValue(name).trim();
-const paint={halo:token(stage,'--anatomy-halo'),glass:token(stage,'--anatomy-text'),lights:token(stage,'--anatomy-top'),tail:token(stage,'--anatomy-mid'),snow:token(stage,'--snow'),snowShade:token(stage,'--snow-shade')};
+const paint={halo:token(stage,'--anatomy-halo'),glass:token(stage,'--anatomy-text'),lights:token(stage,'--anatomy-top'),tail:token(stage,'--anatomy-mid'),snow:token(stage,'--snow'),snowShade:token(stage,'--snow-shade'),beam:token(stage,'--car-beam'),lights:'#fff6d6',tail:'#ff4a3a'};
 const liveries=[...new Set(traffic.cars.map(c=>c.color))].reduce((all,color)=>{
   const probe=document.createElement('i');probe.className='city-car car-'+color;stage.append(probe);
   all[color]={top:token(probe,'--car-top'),side:token(probe,'--car-side'),roof:token(probe,'--car-roof')};
@@ -54,7 +54,7 @@ function shapeOf(prop){
     for(const [,op,a,b] of d.matchAll(/([MLl])(-?\d*\.?\d+) ?(-?\d*\.?\d+)/g)){if(op==='l'){x+=+a;y+=+b;}else{x=+a;y=+b;}points.push([x,y]);}
     cuts.push({shape:new Path2D(d),solid:!node.classList.contains('iso-line'),hull:hullOf(points)});
   }
-  for(const c of prop.node.querySelectorAll('circle')){
+  for(const c of prop.node.querySelectorAll('.bauble circle')){
     const cx=+c.getAttribute('cx'),cy=+c.getAttribute('cy'),r=+c.getAttribute('r'),shape=new Path2D();
     shape.arc(cx,cy,r,0,Math.PI*2);cuts.push({shape,solid:true,hull:hullOf([[cx-r,cy-r],[cx+r,cy-r],[cx+r,cy+r],[cx-r,cy+r]])});
   }
@@ -65,6 +65,8 @@ const bodyRing=roundedPlan({x:-5.5,y:-2.5,w:11,d:5,r:1.2},2);
 const cabinRing=roundedPlan({x:-3.2,y:-1.9,w:5.8,d:3.8,r:.6},2);
 const shadowRing=roundedPlan({x:-5.1,y:-2,w:11.4,d:5.3,r:1.4},2);
 // Snow carried on the roof, bonnet and boot.
+// Headlight beams on the road ahead: a wide faint fan and a brighter core.
+const BEAM=[[5.2,-2.2],[21,-5.2],[23,0],[21,5.2],[5.2,2.2]],BEAM_CORE=[[5.2,-1.9],[13,-3.3],[14.5,0],[13,3.3],[5.2,1.9]];
 const roofSnow=roundedPlan({x:-1.75,y:-1.6,w:2.7,d:3.2,r:1},2),bonnetSnow=roundedPlan({x:2.8,y:-1.7,w:1.7,d:3.4,r:.7},2),bootSnow=roundedPlan({x:-4.6,y:-1.6,w:1.2,d:3.2,r:.5},2);
 const path=points=>points.map(([x,y],i)=>(i?'L':'M')+x.toFixed(2)+' '+y.toFixed(2)).join('')+'Z';
 // The projection is affine, so a car's outline depends only on its heading; moving it is a plain
@@ -81,7 +83,8 @@ function shapeAt(angle){
   const body=extrude(bodyRing.map(rotate),.65,1.8,P),cabin=extrude(cabinRing.map(rotate),2.45,1.4,P);
   // [path, colour, alpha] in paint order; the body outline is the only stroked part.
   const parts=[
-    [path(projected(shadowRing,.12)),'halo',.2],[body.fill,'side',1],[body.top,'top',1],[body.outline,'edge',1],
+    [path(projected(BEAM,.14)),'beam',.2],[path(projected(BEAM_CORE,.14)),'beam',.32],
+    [path(projected(shadowRing,.12)),'halo',.3],[body.fill,'side',1],[body.top,'top',1],[body.outline,'edge',1],
     [cabin.fill,'side',1],[cabin.top,'roof',1],
     [quads([[[1.1,-1.7],[2.2,-1.7],[2.2,1.7],[1.1,1.7]],[[-2.8,-1.65],[-1.9,-1.65],[-1.9,1.65],[-2.8,1.65]]],3.9),'glass',1],
     [quads([[[4.7,-2.1],[5.25,-2.1],[5.25,-1.2],[4.7,-1.2]],[[4.7,1.2],[5.25,1.2],[5.25,2.1],[4.7,2.1]]],2.48),'lights',1],
@@ -89,8 +92,47 @@ function shapeAt(angle){
     [path(projected(bonnetSnow,2.47))+path(projected(bootSnow,2.47)),'snowShade',1],[path(projected(bonnetSnow,2.72))+path(projected(bootSnow,2.68)),'snow',1],
     [path(projected(roofSnow,3.9)),'snowShade',1],[path(projected(roofSnow,4.3)),'snow',1]
   ].map(([d,colour,alpha])=>({shape:new Path2D(d),colour,alpha}));
-  const hull=hullOf([...projected(shadowRing,.12),...projected(bodyRing,.65),...projected(bodyRing,2.45),...projected(cabinRing,3.85),...projected(roofSnow,4.3)].map(([x,y])=>[x-ORIGIN[0],y-ORIGIN[1]]));
+  const hull=hullOf([...projected(shadowRing,.12),...projected(bodyRing,.65),...projected(bodyRing,2.45),...projected(cabinRing,3.85),...projected(roofSnow,4.3),...projected(BEAM,.14)].map(([x,y])=>[x-ORIGIN[0],y-ORIGIN[1]]));
   return shapes[key]={parts,hull,x0:Math.min(...hull.xs)-SLACK,y0:Math.min(...hull.ys)-SLACK,x1:Math.max(...hull.xs)+SLACK,y1:Math.max(...hull.ys)+SLACK};
+}
+// Christmas-tree lights twinkle on this canvas rather than in the SVG, so the map never repaints.
+// Each decorated tree becomes a group of glows placed over its baubles and star.
+const GLOWS=['#ff5b4d','#ffd35a','#fff6dc','#ffe27a'];
+const garlands=props.filter(p=>p.node.querySelector('.bauble')).map((prop,index)=>{
+  const bulbs=[];
+  [0,1,2].forEach(tone=>{for(const c of prop.node.querySelectorAll('.bauble-'+tone+' circle'))bulbs.push({x:+c.getAttribute('cx'),y:+c.getAttribute('cy'),tone,size:5,phase:bulbs.length*2.4+index,rate:1.6+(bulbs.length%5)*.45});});
+  const star=prop.node.querySelector('.xmas-star').getBBox();
+  bulbs.push({x:star.x+star.width/2,y:star.y+star.height/2,tone:3,size:13,phase:index,rate:1.1});
+  const xs=bulbs.map(b=>b.x),ys=bulbs.map(b=>b.y),x0=Math.min(...xs)-13,y0=Math.min(...ys)-13,x1=Math.max(...xs)+13,y1=Math.max(...ys)+13;
+  return {depth:prop.depth,bulbs,x:0,y:0,shape:{hull:hullOf([[x0,y0],[x1,y0],[x1,y1],[x0,y1]]),x0,y0,x1,y1}};
+});
+// One soft dot per colour, redrawn only when the zoom changes.
+let glowScale=0,glowSprites=[];
+function glowSprite(colour,k){
+  const R=Math.max(4,Math.ceil(16*k)),image=document.createElement('canvas');image.width=image.height=R*2;
+  const g=image.getContext('2d'),fade=g.createRadialGradient(R,R,0,R,R,R);
+  fade.addColorStop(0,'#fff');fade.addColorStop(.14,colour);fade.addColorStop(.45,colour+'55');fade.addColorStop(1,colour+'00');
+  g.fillStyle=fade;g.fillRect(0,0,R*2,R*2);return image;
+}
+function paintGarland(garland,k,left,top){
+  if(glowScale!==k){glowScale=k;glowSprites=GLOWS.map(colour=>glowSprite(colour,k));}
+  ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation='lighter';
+  for(const bulb of garland.bulbs){
+    const pulse=.5+.5*Math.sin(clock*bulb.rate+bulb.phase),half=bulb.size*k*(.75+.25*pulse);
+    ctx.globalAlpha=.3+.7*pulse;
+    ctx.drawImage(glowSprites[bulb.tone],left+bulb.x*k-half,top+bulb.y*k-half,half*2,half*2);
+  }
+  ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
+}
+function paintCar(car,k,left,top){
+  const {shape,livery}=car;
+  ctx.setTransform(k,0,0,k,left+(car.x-ORIGIN[0])*k,top+(car.y-ORIGIN[1])*k);
+  ctx.lineCap='butt';ctx.lineWidth=.35/scale;
+  for(const part of shape.parts){
+    ctx.globalAlpha=part.alpha;
+    if(part.colour==='edge'){ctx.strokeStyle=livery.side;ctx.stroke(part.shape);}
+    else{ctx.fillStyle=livery[part.colour]??paint[part.colour];ctx.fill(part.shape);}
+  }
 }
 let view=null,scale=1,dpr=1,clock=0;
 function place(car){
@@ -107,24 +149,20 @@ function draw(){
   ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);
   ctx.lineJoin='round';
   for(const car of cars)place(car);
-  // Far to near: paint a car, then cut away whatever stands in front of it. A nearer car painted
-  // later is untouched by that cut, so cars and objects interleave exactly as a depth sort would.
-  for(const car of cars.filter(c=>c.visible).sort((a,b)=>a.depth-b.depth)){
-    const {shape,livery}=car;
-    ctx.setTransform(k,0,0,k,left+(car.x-ORIGIN[0])*k,top+(car.y-ORIGIN[1])*k);
-    ctx.lineCap='butt';ctx.lineWidth=.35/scale;
-    for(const part of shape.parts){
-      ctx.globalAlpha=part.alpha;
-      if(part.colour==='edge'){ctx.strokeStyle=livery.side;ctx.stroke(part.shape);}
-      else{ctx.fillStyle=livery[part.colour]??paint[part.colour];ctx.fill(part.shape);}
-    }
-    const x0=car.x+shape.x0,y0=car.y+shape.y0,x1=car.x+shape.x1,y1=car.y+shape.y1;
+  const lit=garlands.filter(g=>g.shape.x1>view.x&&g.shape.x0<view.x+view.width&&g.shape.y1>view.y&&g.shape.y0<view.y+view.height);
+  // Far to near: paint a car or a tree's lights, then cut away whatever stands in front of it.
+  // Anything nearer painted later is untouched by that cut, so cars, lights and objects
+  // interleave exactly as a depth sort would.
+  for(const item of [...cars.filter(c=>c.visible),...lit].sort((a,b)=>a.depth-b.depth)){
+    const shape=item.shape;
+    if(item.bulbs)paintGarland(item,k,left,top);else paintCar(item,k,left,top);
+    const x0=item.x+shape.x0,y0=item.y+shape.y0,x1=item.x+shape.x1,y1=item.y+shape.y1;
     let cutting=false;
-    for(let i=nearerFrom(car.depth);i<props.length;i++){
+    for(let i=nearerFrom(item.depth);i<props.length;i++){
       const prop=props[i];if(prop.x0>x1||prop.x1<x0||prop.y0>y1||prop.y1<y0)continue;
       const {cuts,weight}=shapeOf(prop);
       for(const cut of cuts){
-        if(!touching(shape.hull,car.x,car.y,cut.hull))continue;
+        if(!touching(shape.hull,item.x,item.y,cut.hull))continue;
         if(!cutting){cutting=true;ctx.setTransform(k,0,0,k,left,top);ctx.globalAlpha=1;ctx.globalCompositeOperation='destination-out';ctx.lineCap='round';}
         ctx.lineWidth=weight/scale;
         if(cut.solid)ctx.fill(cut.shape);
