@@ -7,7 +7,6 @@ import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as k from "../kit/iso-kit.mjs";
-import { kitScript } from "../scripts/inline-kit.mjs";
 import { chromeCss, chromeHtml } from "../scripts/chrome.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -355,5 +354,5 @@ const body = `<style>${chromeCss()}</style>${chromeHtml({ active: "hill", theme 
 })}`;
 
 const out = theme === "light" ? "hill-climbing-light.html" : "hill-climbing.html";
-writeFileSync(join(HERE, out), k.pageHtml({ title: "Hill Climbing Algorithm", theme, width: 1200, body, script: kitScript() + live }));
+writeFileSync(join(HERE, out), k.pageHtml({ title: "Hill Climbing Algorithm", theme, width: 1200, body, script: 'import { iso, depthOf, translateAlong, pathOf } from "/kit/iso-kit.mjs";\n' + live }));
 console.log("wrote", out, "· path from", START, "=", PATH0.join("→"));
