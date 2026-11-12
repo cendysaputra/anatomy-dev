@@ -64,6 +64,6 @@ Anatomy is MIT licensed; see `LICENSE-anatomy`.
 
 ### Keyboard
 
-A blank 104-key ANSI mechanical keyboard built with the Anatomy SVG kit. Scroll down to separate keycaps, switches, plate, PCB, foam and case; scroll back to reassemble. Component labels and leader lines fade in as the layers separate, and disappear when reassembled. There are no playback controls. Motion uses projected layer translations and respects reduced-motion preferences.
+A blank 104-key ANSI mechanical keyboard built with the Anatomy SVG kit. Before scrolling, an automatic typing rhythm presses individual keys, covering all 104 keys in each cycle. Typing stops and releases all keys when scrolling begins, resumes after full reassembly, and pauses for hidden tabs or reduced-motion preferences. Scroll down to separate keycaps, switches, plate, PCB, foam and case; scroll back to reassemble. Component labels and leader lines fade in as the layers separate, and disappear when reassembled. There are no playback controls. Motion uses projected layer translations and respects reduced-motion preferences.
 
 Rebuild with `node keyboard/build.mjs`. Validate with `node --test keyboard/keyboard.test.mjs`.
