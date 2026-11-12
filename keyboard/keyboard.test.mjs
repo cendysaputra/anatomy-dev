@@ -1,3 +1,4 @@
+import {readFileSync,existsSync} from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {keys,body} from './layout.mjs';
@@ -16,5 +17,16 @@ test('scroll endpoints assemble exactly and expose every layer',()=>{
   assert.deepEqual(displacement(name,2),offset);
   for(let t=0;t<1;t+=.05)assert.ok(displacement(name,t).every(Number.isFinite));
   assert.deepEqual(displacement(name,0.4),displacement(name,0.4));
+ }
+});
+
+// Vercel rewrites /keyboard to its index without adding a trailing slash.
+test('animation entry loads from every supported keyboard URL',()=>{
+ const html=readFileSync(new URL('./index.html',import.meta.url),'utf8');
+ const entry=html.match(/<script type="module" src="([^"]+)"/)[1];
+ for(const route of ['/keyboard','/keyboard/','/keyboard/index.html']){
+  const resolved=new URL(entry,'https://anatomy.example'+route);
+  assert.equal(resolved.pathname,'/keyboard/app.mjs');
+  assert.ok(existsSync(new URL('..'+resolved.pathname,import.meta.url)));
  }
 });
