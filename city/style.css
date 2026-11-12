@@ -29,3 +29,5 @@ body:has(.city-stage) .site-header{user-select:none}
 .bauble circle{stroke:#fff;stroke-width:.4}.bauble-0 circle{fill:#c8372d}.bauble-1 circle{fill:#e2b53e}.bauble-2 circle{fill:#f4f1ea}
 .xmas-star{fill:#f2c94c;stroke:#b8891b;stroke-width:.5;stroke-linejoin:round}
 .cone-side{fill:#4f8256}.cone-shade{fill:#36633d}.cone-edge{fill:none;stroke:#2a4d31;stroke-width:.45;stroke-linejoin:round}
+/* Christmas traffic: a few red and green cars among the greys. */
+.car-2{--car-top:#c8372d;--car-side:#9e2a22;--car-roof:#e2564b}.car-4{--car-top:#3f7a4a;--car-side:#2c5a35;--car-roof:#5d9466}
