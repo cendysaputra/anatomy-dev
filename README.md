@@ -9,6 +9,7 @@ Interactive visual explanations built with the [Anatomy](https://github.com/wher
 | Hill climbing | `/` | `/dark` |
 | Load balancing | `/load-balancer` | `/load-balancer/dark` |
 | Cache | `/cache` | White canvas |
+| CDN | `/cdn` | White canvas |
 
 ### Load balancer
 
@@ -26,9 +27,15 @@ A compact cache-aside illustration: choose Product A or B, request it twice to c
 
 Reference: [Microsoft cache-aside pattern](https://learn.microsoft.com/en-us/azure/architecture/patterns/cache-aside).
 
+### CDN
+
+Choose Jakarta or Frankfurt to route a request for `hero.webp` to its illustrative regional edge. The first request fetches and caches the asset from origin; another request in that region hits its local copy. Each edge has an independent cache. Purge clears both copies without resetting the total origin-read count. Region mapping and animation times are illustrative; TTL, revalidation, cache hierarchies and non-cacheable responses are outside this model.
+
+Reference: [Cloudflare CDN overview](https://www.cloudflare.com/learning/cdn/what-is-a-cdn/).
+
 ## Development
 
-The readable source is `load-balancer/build.mjs`, `load-balancer/app.mjs`, `load-balancer/model.mjs`, and `load-balancer/style.css`. Shared full-width layout and typography live in `scripts/chrome.mjs`. Titles use IBM Plex Sans, and body text uses Manrope at 16px. Fonts are loaded through Google Fonts with system fallbacks.
+The readable source is `load-balancer/build.mjs`, `load-balancer/app.mjs`, `load-balancer/model.mjs`, and `load-balancer/style.css`. Shared full-width layout and typography live in `scripts/chrome.mjs`. Titles use IBM Plex Sans, and body text uses Manrope at 14px. Fonts are loaded through Google Fonts with system fallbacks.
 
 ```sh
 node hill-climbing/build.mjs
@@ -36,11 +43,13 @@ node hill-climbing/build.mjs --light
 node load-balancer/build.mjs
 node load-balancer/build.mjs --dark
 node cache/build.mjs
+node cdn/build.mjs
+node --test cdn/model.test.mjs
 node --test load-balancer/model.test.mjs
 ```
 
 Serve the repository root with any static HTTP server and open `/load-balancer/index.html`. Clean URLs use the rewrites in `vercel.json`.
 
-Generated HTML files are committed so Vercel can serve the project directly. When changing a builder or shared layout, rebuild its HTML files before committing. All work for this revision is on `main`.
+Generated HTML files are committed so Vercel can serve the project directly. When changing a builder or shared layout, rebuild its HTML files before committing. The CDN addition is on `feature/cdn-illustration`, based on the latest shared layout.
 
 Anatomy is MIT licensed; see `LICENSE-anatomy`.

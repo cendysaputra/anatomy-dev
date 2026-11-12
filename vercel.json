@@ -19,6 +19,10 @@
     {
       "source": "/cache",
       "destination": "/cache/index.html"
+    },
+    {
+      "source": "/cdn",
+      "destination": "/cdn/index.html"
     }
   ]
 }
