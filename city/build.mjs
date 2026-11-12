@@ -2,8 +2,8 @@ import {writeFileSync} from 'node:fs';
 import * as k from '../kit/iso-kit.mjs';
 import {chromeCss,chromeHtml,footerHtml} from '../scripts/chrome.mjs';
 import {GRID,cityTraffic} from './routes.mjs';
-const W=1100,H=850,base={x:-216,y:-216,w:432,d:432,r:8};
-const P=k.fitProjection([...k.boxCorners(base,-6,0),[-60,-60,64],[60,60,64]],W,H,{pad:30,azimuth:45,elevation:55});
+const W=1100,H=660,base={x:-216,y:-216,w:432,d:432,r:8};
+const P=k.fitProjection([...k.boxCorners(base,-6,0),[-60,-60,64],[60,60,64]],W,H,{pad:30,azimuth:62,elevation:30});
 const at=p=>k.iso(p,P),S=(p,o={})=>k.solidSvg(p,{tone:'mid',crease:'lo',...o});
 const plan=(x,y,w,d,r=1)=>({x,y,w,d,r});
 const slab=(p,z,h)=>S(k.slabOf(p,z,h,P,3,.4));
@@ -15,8 +15,6 @@ function tree(x,y,size=1){trees++;const trunk=S(k.cylinder(x,y,.85*size,1,4*size
 function building(x,y,w,d,h,seed){
  buildings++;
  const shell=plan(x,y,w,d,1.1),setback=seed%4===0;
- const palettes=[['#f4f2ec','#e2e1d9','#dddcd4'],['#edf0e9','#dce3d7','#d5ddd1'],['#e7eceb','#d6dfdc','#ced8d3'],['#f1e9e2','#e4d8cb','#dbcec1']];
- const [roof,face,shade]=palettes[seed%palettes.length];
  let out=`<path class="building-shadow" d="${top(plan(x+4,y+5,w+2,d+2,1.3),.2)}"/>`;
  out+=slab(shell,1,setback?5:h);
  const tower=setback?plan(x+2.5,y+2.5,w-5,d-5,1):shell;
@@ -31,7 +29,7 @@ function building(x,y,w,d,h,seed){
  if(seed%3===0){out+=`<g class="roof-machine">${slab(plan(tower.x+3,tower.y+3,5,7,1),h+1,2.2)}</g>`;out+=line([[tower.x+4,tower.y+5,h+3.2],[tower.x+7,tower.y+5,h+3.2]],{tone:'lo'});}
  else if(seed%3===1){out+=`<g class="solar"><path d="${top(plan(tower.x+3,tower.y+3,8,10,.2),h+1.2)}"/>${line([[tower.x+7,tower.y+3,h+1.3],[tower.x+7,tower.y+13,h+1.3]],{tone:'faint'})}</g>`;}
  else out+=`<g class="roof-machine">${S(k.cylinder(tower.x+tower.w/2,tower.y+tower.d/2,3,h+1,3,P,14))}</g>`;
- add(x+w/2,y+d/2,`<g class="city-building" style="--anatomy-top:${roof};--anatomy-shade-0:${shade};--anatomy-shade-1:${shade};--anatomy-shade-2:${face};--anatomy-shade-3:${face}">${out}</g>`,'building');
+ add(x+w/2,y+d/2,`<g class="city-building">${out}</g>`,'building');
 }
 const ground=[];
 ground.push(`<path class="city-base-shadow" d="${top({...base,x:base.x+4,y:base.y+7},-7)}"/>`,slab(base,-6,6));
@@ -67,14 +65,14 @@ for(let row=0;row<4;row++)for(let col=0;col<4;col++){
  // A slim street light on every block, set back from the carriageway.
  const lx=x+35,ly=y-1;add(lx,ly,`<g class="street-light">${line([[lx,ly,1],[lx,ly,8],[lx,ly-3,8]],{tone:'mid'})}${S(k.cylinder(lx,ly-3,1.3,8,.65,P,10))}</g>`);
 }
-// An outer green verge gives the road network a clean model edge.
+// An outer planted verge gives the road network a clean model edge.
 for(const p of [-154,-58,38,134]){tree(-210,p,.8);tree(210,p,.8);tree(p,-210,.8);tree(p,210,.8);}
 objects.sort((a,b)=>a.depth-b.depth);
 const traffic=cityTraffic();
 const carMarkup=traffic.cars.map((c,i)=>`<g class="city-car car-${c.color}" data-car="${i}" aria-hidden="true"><path data-car-part="shadow"/><path data-car-part="side"/><path data-car-part="top"/><path data-car-part="edge"/><path data-car-part="cabin-side"/><path data-car-part="cabin-top"/><path data-car-part="glass"/><path data-car-part="lights"/><path data-car-part="tail"/></g>`).join('');
 const fig=k.figureSvg({width:W,height:H,label:`Miniatur kota isometrik berisi ${buildings} gedung, taman, jalan dua arah, dan ${traffic.cars.length} mobil yang bergerak otomatis dalam lintasan looping.`,body:[...ground,`<g id="city-scene">${objects.map((o,i)=>`<g data-city-object="${i}" data-depth="${o.depth.toFixed(6)}" data-kind="${o.kind}">${o.body}</g>`).join('')}${carMarkup}</g>`]});
 const body=`<style>${chromeCss()}</style><link rel="stylesheet" href="/city/style.css">${chromeHtml({active:'city'})}<figure class="city-figure"><div class="city-stage" aria-label="Pemandangan kota isometrik">${fig}</div><figcaption class="city-caption"><span>${buildings} gedung · ${traffic.cars.length} mobil · ${trees} pohon</span><span class="city-live">Bergerak otomatis</span></figcaption></figure><script id="city-config" type="application/json">${JSON.stringify({projection:P,buildings,cars:traffic.cars.length})}</script>${footerHtml()}`;
-let html=k.pageHtml({title:'Kota — Anatomy Dev',theme:'light',width:1280,body});
-html=html.replace('<html lang="en">','<html lang="id">').replace('</head>','<meta name="description" content="Miniatur kota isometrik dari atas, dengan puluhan gedung dan mobil yang bergerak looping otomatis."></head>').replace('</body>','<script type="module" src="/city/app.mjs"></script></body>');
+let html=k.pageHtml({title:'City — Anatomy Dev',theme:'light',width:1280,body});
+html=html.replace('<html lang="en">','<html lang="id">').replace('</head>','<meta name="description" content="Miniatur kota dengan sudut isometrik Anatomy, dengan puluhan gedung dan mobil yang bergerak looping otomatis."></head>').replace('</body>','<script type="module" src="/city/app.mjs"></script></body>');
 writeFileSync(new URL('index.html',import.meta.url),html);
 console.log(`Built city · ${buildings} buildings · ${traffic.cars.length} cars · ${trees} trees`);
