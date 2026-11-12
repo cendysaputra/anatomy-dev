@@ -41,7 +41,7 @@ export function setupCamera(stage){
   });
   // Zoom is fixed per screen shape: the base close-up, or closer on tall screens so the map
   // always covers the whole stage. Recomputed on every resize, never ratcheted upward.
-  const BASE_ZOOM=1.6;
+  const BASE_ZOOM=1.15;
   function resize(){
     const box=stage.getBoundingClientRect();if(box.width<50||box.height<50)return;
     const aspect=box.width/box.height;camera.resize(aspect);
