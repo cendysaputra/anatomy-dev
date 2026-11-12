@@ -61,3 +61,12 @@ body.iso:has(.city-stage){--anatomy-page:#070c18;--surface:rgba(16,23,40,.94);--
 /* Cars at night: darker bodies so the snow, headlights and tail lights stand out. */
 .city-car{--car-top:#5b6a8c;--car-side:#3a4664;--car-roof:#6c7ca0}.car-1{--car-top:#c9d3e6;--car-side:#8f9dba;--car-roof:#e2e9f5}.car-3{--car-top:#2c3650;--car-side:#1b2338;--car-roof:#3a4664}
 .car-2{--car-top:#c8372d;--car-side:#8f241c;--car-roof:#e2564b}.car-4{--car-top:#3f7a4a;--car-side:#28532f;--car-roof:#5d9466}
+/* Minimisable sidebar: a button folds it down to a small pill so the map is unobstructed. */
+.menu-toggle{appearance:none;border:0;padding:0;width:32px;height:32px;border-radius:9px;display:grid;place-items:center;flex:none;order:3;background:transparent;color:var(--anatomy-text);cursor:pointer}
+.menu-toggle:hover{background:rgba(255,255,255,.09);color:var(--anatomy-strong)}
+.menu-toggle svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.menu-toggle .icon-open,.site-header.is-min .menu-toggle .icon-close{display:none}.site-header.is-min .menu-toggle .icon-open{display:block}
+.site-header.is-min .iso-nav,.site-header.is-min .side-foot{display:none}
+body:has(.city-stage) .site-header.is-min{width:max-content;height:auto;flex-direction:row;align-items:center;gap:6px;padding:8px 8px 8px 6px;justify-self:start}
+.site-header:not(.is-min) .menu-toggle{position:absolute;top:15px;right:12px}
+@media(max-width:900px){.site-header:not(.is-min) .menu-toggle{top:6px;right:6px}}

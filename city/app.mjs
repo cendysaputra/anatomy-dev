@@ -66,7 +66,7 @@ const cabinRing=roundedPlan({x:-3.2,y:-1.9,w:5.8,d:3.8,r:.6},2);
 const shadowRing=roundedPlan({x:-5.1,y:-2,w:11.4,d:5.3,r:1.4},2);
 // Snow carried on the roof, bonnet and boot.
 // Headlight beams on the road ahead: a wide faint fan and a brighter core.
-const BEAM=[[5.2,-2.2],[21,-5.2],[23,0],[21,5.2],[5.2,2.2]],BEAM_CORE=[[5.2,-1.9],[13,-3.3],[14.5,0],[13,3.3],[5.2,1.9]];
+const BEAM=[[5.2,-2.2],[15,-4.4],[16.5,0],[15,4.4],[5.2,2.2]],BEAM_CORE=[[5.2,-1.9],[10.5,-2.9],[11.5,0],[10.5,2.9],[5.2,1.9]];
 const roofSnow=roundedPlan({x:-1.75,y:-1.6,w:2.7,d:3.2,r:1},2),bonnetSnow=roundedPlan({x:2.8,y:-1.7,w:1.7,d:3.4,r:.7},2),bootSnow=roundedPlan({x:-4.6,y:-1.6,w:1.2,d:3.2,r:.5},2);
 const path=points=>points.map(([x,y],i)=>(i?'L':'M')+x.toFixed(2)+' '+y.toFixed(2)).join('')+'Z';
 // The projection is affine, so a car's outline depends only on its heading; moving it is a plain
@@ -93,7 +93,7 @@ function shapeAt(angle){
     [path(projected(roofSnow,3.9)),'snowShade',1],[path(projected(roofSnow,4.3)),'snow',1]
   ].map(([d,colour,alpha])=>({shape:new Path2D(d),colour,alpha}));
   const hull=hullOf([...projected(shadowRing,.12),...projected(bodyRing,.65),...projected(bodyRing,2.45),...projected(cabinRing,3.85),...projected(roofSnow,4.3),...projected(BEAM,.14)].map(([x,y])=>[x-ORIGIN[0],y-ORIGIN[1]]));
-  return shapes[key]={parts,hull,x0:Math.min(...hull.xs)-SLACK,y0:Math.min(...hull.ys)-SLACK,x1:Math.max(...hull.xs)+SLACK,y1:Math.max(...hull.ys)+SLACK};
+  return shapes[key]={key,parts,hull,x0:Math.min(...hull.xs)-SLACK,y0:Math.min(...hull.ys)-SLACK,x1:Math.max(...hull.xs)+SLACK,y1:Math.max(...hull.ys)+SLACK};
 }
 // Christmas-tree lights twinkle on this canvas rather than in the SVG, so the map never repaints.
 // Each decorated tree becomes a group of glows placed over its baubles and star.
@@ -124,14 +124,36 @@ function paintGarland(garland,k,left,top){
   }
   ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
 }
-function paintCar(car,k,left,top){
-  const {shape,livery}=car;
-  ctx.setTransform(k,0,0,k,left+(car.x-ORIGIN[0])*k,top+(car.y-ORIGIN[1])*k);
-  ctx.lineCap='butt';ctx.lineWidth=.35/scale;
+function paintParts(g,shape,livery){
+  g.lineJoin='round';g.lineCap='butt';g.lineWidth=.35/scale;
   for(const part of shape.parts){
-    ctx.globalAlpha=part.alpha;
-    if(part.colour==='edge'){ctx.strokeStyle=livery.side;ctx.stroke(part.shape);}
-    else{ctx.fillStyle=livery[part.colour]??paint[part.colour];ctx.fill(part.shape);}
+    g.globalAlpha=part.alpha;
+    if(part.colour==='edge'){g.strokeStyle=livery.side;g.stroke(part.shape);}
+    else{g.fillStyle=livery[part.colour]??paint[part.colour];g.fill(part.shape);}
+  }
+  g.globalAlpha=1;
+}
+// A car driving straight keeps one of four headings, so it is drawn once per colour into a small
+// image and stamped each frame; only cars in the middle of a turn are drawn as paths.
+let stampScale=0;const stamps=new Map();
+function stampOf(car,k){
+  if(stampScale!==k){stampScale=k;stamps.clear();}
+  const shape=car.shape,key=shape.key+'/'+car.data.color;let stamp=stamps.get(key);
+  if(!stamp){
+    stamp=document.createElement('canvas');stamp.width=Math.ceil((shape.x1-shape.x0)*k)+2;stamp.height=Math.ceil((shape.y1-shape.y0)*k)+2;
+    const g=stamp.getContext('2d');g.setTransform(k,0,0,k,1-(ORIGIN[0]+shape.x0)*k,1-(ORIGIN[1]+shape.y0)*k);
+    paintParts(g,shape,car.livery);stamps.set(key,stamp);
+  }
+  return stamp;
+}
+function paintCar(car,k,left,top){
+  const shape=car.shape;
+  if(shape.key%(HEADINGS/4)===0){
+    ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;
+    ctx.drawImage(stampOf(car,k),left+(car.x+shape.x0)*k-1,top+(car.y+shape.y0)*k-1);
+  }else{
+    ctx.setTransform(k,0,0,k,left+(car.x-ORIGIN[0])*k,top+(car.y-ORIGIN[1])*k);
+    paintParts(ctx,shape,car.livery);
   }
 }
 let view=null,scale=1,dpr=1,clock=0;
@@ -181,5 +203,16 @@ function onView(box,nextScale){
 }
 setupCamera(stage,onView);
 pauseOffscreen(stage);
-onFrame(dt=>{clock+=Math.min(dt,.25);draw();});
+// Cars creep along slowly, so 30 frames a second is plenty and halves the work of this canvas.
+onFrame(dt=>{clock+=Math.min(dt,.25);draw();},30);
 snow(stage);
+// The sidebar can be minimised to a small pill; the choice is remembered on this device.
+const menu=document.querySelector('.site-header'),toggle=menu.querySelector('.menu-toggle');
+function setMenu(open,remember){
+  menu.classList.toggle('is-min',!open);
+  toggle.setAttribute('aria-expanded',String(open));toggle.setAttribute('aria-label',open?'Kecilkan menu':'Buka menu');
+  if(remember)try{localStorage.setItem('city-menu',open?'open':'min');}catch{}
+}
+let saved=null;try{saved=localStorage.getItem('city-menu');}catch{}
+setMenu(saved==='open',false);
+toggle.addEventListener('click',()=>setMenu(menu.classList.contains('is-min'),true));

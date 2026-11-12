@@ -51,5 +51,6 @@ export function snow(stage){
   }
   new ResizeObserver(size).observe(stage);size();
   reduced.addEventListener('change',()=>{if(reduced.matches)ctx.clearRect(0,0,w,h);});
-  onFrame(draw);
+  // 30 frames a second, in step with the cars, keeps the whole page light.
+  onFrame(draw,30);
 }
