@@ -39,12 +39,14 @@ export function setupCamera(stage){
     camera.pan(event.key==='ArrowLeft'?-step:event.key==='ArrowRight'?step:0,event.key==='ArrowUp'?-step:event.key==='ArrowDown'?step:0);apply(true);
     event.preventDefault();
   });
+  // Zoom is fixed per screen shape: the base close-up, or closer on tall screens so the map
+  // always covers the whole stage. Recomputed on every resize, never ratcheted upward.
+  const BASE_ZOOM=1.6;
   function resize(){
-    const box=stage.getBoundingClientRect();if(!box.width||!box.height)return;
+    const box=stage.getBoundingClientRect();if(box.width<50||box.height<50)return;
     const aspect=box.width/box.height;camera.resize(aspect);
-    // Tall screens: zoom in until the map covers the whole stage, with no empty bands.
     const cover=camera.baseWidth/Math.min(world.width,world.height*aspect);
-    if(camera.zoom<cover*1.15){camera.maxZoom=Math.max(camera.maxZoom,cover*1.15);camera.zoomAt(cover*1.15);}
+    const zoom=Math.max(BASE_ZOOM,cover*1.05);camera.maxZoom=Math.max(4,zoom);camera.zoomAt(zoom);
     apply();
   }
   new ResizeObserver(resize).observe(stage);resize();
