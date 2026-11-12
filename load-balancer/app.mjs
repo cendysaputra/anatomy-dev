@@ -10,36 +10,23 @@ const dots=new Map();
 let mode='idle',rate=2,emission=0,last=0,uiAge=0;
 function controls(){
   const auto=mode==='auto';
-  $('#play').textContent=auto?'Ⅱ Jeda simulasi':mode==='paused'?'▷ Lanjutkan simulasi':'▷ Mulai simulasi';
-  $('#play').setAttribute('aria-label',auto?'Jeda simulasi':'Mulai atau lanjutkan simulasi');
-  $('#live').dataset.paused=String(!['auto','manual'].includes(mode));
-  $('#live').textContent=auto?'Live simulation':mode==='paused'?'Simulasi dijeda':mode==='manual'?'Mengirim request':'Siap dijalankan';
+  $('#play').textContent=auto?'Jeda':mode==='paused'?'Lanjut':'Mulai';
 }
 function paint(){
   $('#sent').textContent=model.sent;
   $('#inflight').textContent=model.inflight;
-  $('#completed').innerHTML=model.completed+' <small>200 OK</small>';
+  $('#completed').textContent=model.completed;
   $('#failed').textContent=model.failed;
-  const sum=model.servers.reduce((n,s)=>n+s.assigned,0);
   for(const s of model.servers){
-    const i=s.id;
-    $('[data-machine="'+i+'"]').dataset.down=String(!s.up);
-    $('[data-machine="'+i+'"]').dataset.busy=String(s.active>0);
-    $('[data-toggle="'+i+'"]').setAttribute('aria-checked',String(s.up));
-    $('[data-toggle="'+i+'"]').setAttribute('aria-label','Server '+s.name+' aktif');
-    $('[data-health="'+i+'"]').textContent=s.up?'Healthy':'Offline';
-    $('[data-bar="'+i+'"]').style.width=(sum?s.assigned/sum*100:0)+'%';
-    $('[data-dist="'+i+'"]').dataset.down=String(!s.up);
+    const i=s.id,m=$('[data-machine="'+i+'"]');
+    m.dataset.down=String(!s.up);m.dataset.busy=String(s.active>0);
+    const t=$('[data-toggle="'+i+'"]');t.setAttribute('aria-checked',String(s.up));t.setAttribute('aria-label','Server '+s.name+(s.up?' aktif':' mati'));
     $('[data-count="'+i+'"]').textContent=s.assigned;
   }
-  $('#active-detail').textContent=model.servers.map(s=>s.name+' · '+s.active+' aktif').join('   /   ');
-  $('#weights').textContent=model.algorithm==='weighted'?'Bobot 3 : 2 : 1':'Bobot setara';
-  const newEvents=model.events.map(e=>{const li=document.createElement('li');li.dataset.kind=e.kind;const t=document.createElement('time');t.textContent=String(Math.floor(e.time/60)).padStart(2,'0')+':'+String(Math.floor(e.time%60)).padStart(2,'0');const span=document.createElement('span');span.textContent=e.message;li.append(t,span);return li;});
-  if(newEvents.length)$('#events').replaceChildren(...newEvents);
-  else $('#events').innerHTML='<li><time>00:00</time><span>Menunggu request pertama.</span></li>';
+  for(const b of document.querySelectorAll('[data-algo]'))b.setAttribute('aria-pressed',String(b.dataset.algo===model.algorithm));
   const healthy=model.servers.filter(s=>s.up).length;
-  $('#status').textContent=!healthy?'Semua server offline. Request baru akan gagal dengan 503 Service Unavailable.':mode==='paused'?'Simulasi dijeda. Request dan waktu proses berhenti sampai kamu lanjutkan.':healthy<3?'Server offline dilewati. Request yang sudah terputus tercatat gagal, tanpa retry.':mode==='idle'?'Mulai aliran otomatis, atau kirim satu request untuk mengikuti perjalanannya.':model.algorithm==='least'?'Server B lebih lambat. Amati strategi ini memilih server dengan koneksi aktif paling sedikit.':'Oranye bergerak ke server; hijau membawa response kembali ke client.';
-  $('#send').disabled=model.inflight>=120;$('#burst').disabled=model.inflight>108;
+  $('#status').textContent=!healthy?'Semua server mati. Request baru gagal dengan 503.':mode==='paused'?'Dijeda.':healthy<3?'Server yang mati dilewati. Request yang sedang berjalan di sana gagal, tanpa retry.':mode==='idle'?'Tekan Mulai, atau kirim satu request untuk mengikuti perjalanannya.':'Oranye menuju server, hijau membawa response kembali.';
+  $('#send').disabled=model.inflight>=120;
   controls();
 }
 function packets(){
@@ -64,10 +51,10 @@ function packets(){
 }
 $('#play').addEventListener('click',()=>{mode=mode==='auto'?'paused':'auto';emission=0;paint();});
 function send(count){if(model.inflight+count>120)return;for(let i=0;i<count;i++)model.send();if(mode!=='auto')mode='manual';paint();}
-$('#send').addEventListener('click',()=>send(1));$('#burst').addEventListener('click',()=>send(12));
+$('#send').addEventListener('click',()=>send(1));
 $('#reset').addEventListener('click',()=>{const key=model.algorithm;model.reset();model.setAlgorithm(key);model.events=[];mode='idle';emission=0;packets();paint();});
-$('#algorithm').addEventListener('change',e=>{model.setAlgorithm(e.target.value);$('#strategy-desc').textContent=algorithms[model.algorithm].description;paint();});
-$('#rate').addEventListener('input',e=>{rate=+e.target.value;$('#rate-value').textContent=rate+' req/s';emission=0;});
+for(const b of document.querySelectorAll('[data-algo]'))b.addEventListener('click',()=>{model.setAlgorithm(b.dataset.algo);$('#strategy-desc').textContent=algorithms[model.algorithm].description;paint();});
+$('#rate').addEventListener('input',e=>{rate=+e.target.value;$('#rate-value').textContent=rate+'/s';emission=0;});
 for(const button of document.querySelectorAll('[data-toggle]'))button.addEventListener('click',()=>{model.toggle(+button.dataset.toggle);paint();packets();});
 document.addEventListener('visibilitychange',()=>{last=0;});
 function frame(now){
