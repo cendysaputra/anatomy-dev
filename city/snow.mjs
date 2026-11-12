@@ -6,6 +6,14 @@ export function snow(stage){
   stage.append(canvas);
   const ctx=canvas.getContext('2d');if(!ctx)return;
   let w=0,h=0,dpr=1,flakes=[],sprites=[],time=0;
+  // Every so often a gust sweeps through: the snow is carried sideways and a few faint
+  // streaks of wind race across the screen.
+  let gustAt=3+Math.random()*4,gustStart=0,gustFor=0,gustWay=1,streaks=[];
+  function startGust(way){
+    gustStart=time;gustFor=2.4+Math.random()*1.4;gustWay=way;gustAt=time+gustFor+5+Math.random()*7;
+    streaks=Array.from({length:9},()=>({x:way>0?-200:w+200,y:Math.random()*h,delay:Math.random()*gustFor*.55,speed:520+Math.random()*380,
+      length:90+Math.random()*130,bend:5+Math.random()*9,phase:Math.random()*6}));
+  }
   // Three depths of flake: small, faint and slow far away; large, bright and fast up close.
   // Each is drawn once as a soft dot (white core fading to a pale blue haze against the night)
   // and then stamped as an image, which is far cheaper than filling circles.
@@ -36,7 +44,11 @@ export function snow(stage){
   function draw(dt){
     dt=Math.min(dt,.1);time+=dt;
     // A breeze that slowly swells, fades and turns, carrying near flakes further than far ones.
-    const wind=7+Math.sin(time*.11)*13+Math.sin(time*.37+2)*7;
+    const breeze=7+Math.sin(time*.11)*13+Math.sin(time*.37+2)*7;
+    if(time>=gustAt)startGust(breeze>=0?1:-1);
+    // The gust swells and dies away smoothly.
+    const gust=time<gustStart+gustFor?Math.sin((time-gustStart)/gustFor*Math.PI):0;
+    const wind=breeze+gustWay*gust*110;
     ctx.clearRect(0,0,w,h);
     for(const f of flakes){
       f.phase+=dt*f.rate;
@@ -47,6 +59,17 @@ export function snow(stage){
       if(f.x>w+40)f.x-=w+80;else if(f.x<-40)f.x+=w+80;
       const s=sprites[f.level],half=s.half*f.r/s.radius;
       ctx.drawImage(s.image,f.x+Math.sin(f.phase)*f.sway-half,f.y-half,half*2,half*2);
+    }
+    if(gust>0){
+      // All streaks share one path and one stroke.
+      ctx.beginPath();
+      for(const streak of streaks){
+        if(time-gustStart<streak.delay)continue;
+        streak.x+=gustWay*streak.speed*dt;
+        const tail=streak.x-gustWay*streak.length,lift=Math.sin(streak.phase+time*2.5)*streak.bend;
+        ctx.moveTo(streak.x,streak.y);ctx.quadraticCurveTo((streak.x+tail)/2,streak.y+lift,tail,streak.y+lift*.3);
+      }
+      ctx.lineWidth=1.4;ctx.lineCap='round';ctx.strokeStyle='rgba(226,236,252,'+(gust*.45).toFixed(3)+')';ctx.stroke();
     }
   }
   new ResizeObserver(size).observe(stage);size();
