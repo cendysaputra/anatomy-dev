@@ -1,8 +1,10 @@
 import {writeFileSync} from 'node:fs';
 import * as k from '../kit/iso-kit.mjs';
 import {chromeCss,chromeHtml,footerHtml} from '../scripts/chrome.mjs';
-import {GRID,cityTraffic} from './routes.mjs';
-const W=1100,H=660,base={x:-216,y:-216,w:432,d:432,r:8};
+import {GRID,BLOCKS,cityTraffic} from './routes.mjs';
+const HALF=GRID[BLOCKS]+24,SCALE=HALF/216;
+// The world grows with the city so a block keeps the same size on screen.
+const W=Math.round(1100*SCALE),H=Math.round(660*SCALE),base={x:-HALF,y:-HALF,w:2*HALF,d:2*HALF,r:8};
 const P=k.fitProjection([...k.boxCorners(base,-6,0),[-60,-60,64],[60,60,64]],W,H,{pad:30,azimuth:62,elevation:30});
 const at=p=>k.iso(p,P),S=(p,o={})=>k.solidSvg(p,{tone:'mid',crease:'lo',...o});
 const plan=(x,y,w,d,r=1)=>({x,y,w,d,r});
@@ -34,9 +36,10 @@ function building(x,y,w,d,h,seed){
 const ground=[];
 ground.push(`<path class="city-base-shadow" d="${top({...base,x:base.x+4,y:base.y+7},-7)}"/>`,slab(base,-6,6));
 ground.push(`<path class="city-ground" d="${top(k.insetPlan(base,3),.05)}"/>`);
-for(const road of GRID){ground.push(`<path class="road" d="${top(plan(-207,road-9,414,18,1),.1)}"/><path class="road" d="${top(plan(road-9,-207,18,414,1),.1)}"/>`);}
+const R0=-HALF+9,RL=2*HALF-18;
+for(const road of GRID){ground.push(`<path class="road" d="${top(plan(R0,road-9,RL,18,1),.1)}"/><path class="road" d="${top(plan(road-9,R0,18,RL,1),.1)}"/>`);}
 let stripes='',crossings='';
-for(const road of GRID)for(let i=0;i<4;i++){
+for(const road of GRID)for(let i=0;i<BLOCKS;i++){
  stripes+=k.pathOf([at([GRID[i]+19,road,.15]),at([GRID[i+1]-19,road,.15])]);
  stripes+=k.pathOf([at([road,GRID[i]+19,.15]),at([road,GRID[i+1]-19,.15])]);
 }
@@ -45,10 +48,12 @@ for(const x of GRID)for(const y of GRID)for(let j=-6;j<=6;j+=3){
  crossings+=top(plan(x+j-.7,y+13,1.4,4,0),.15)+top(plan(x+j-.7,y-17,1.4,4,0),.15);
 }
 ground.push(`<path class="road-stripes" d="${stripes}"/><path class="crosswalk" d="${crossings}"/>`);
-for(let row=0;row<4;row++)for(let col=0;col<4;col++){
- const x=GRID[col]+13,y=GRID[row]+13,cx=x+35,cy=y+35,seed=row*4+col;
+const PARKS=new Set(['4,2','1,5','2,1','5,5','0,3','6,0']);
+const MID=(BLOCKS-1)/2;
+for(let row=0;row<BLOCKS;row++)for(let col=0;col<BLOCKS;col++){
+ const x=GRID[col]+13,y=GRID[row]+13,cx=x+35,cy=y+35,seed=row*BLOCKS+col;
  ground.push(`<g class="sidewalk">${slab(plan(x-2,y-2,74,74,4),.2,.8)}</g>`);
- if((row===2&&col===1)||(row===0&&col===3)){
+ if(PARKS.has(row+','+col)){
    ground.push(`<path class="park-ground" d="${top(plan(x+2,y+2,66,66,3),1.05)}"/><path class="park-path" d="${top(plan(cx-3,y+2,6,66,0),1.1)+top(plan(x+2,cy-3,66,6,0),1.1)}"/>`);
    add(cx,cy,`<g class="fountain">${S(k.cylinder(cx,cy,10,1.2,1.7,P,32))}<path class="water" d="${k.ring(cx,cy,8.4,3,P,32)}"/>${S(k.cylinder(cx,cy,2.5,3,2,P,16))}</g>`);
    for(const dx of [-22,22])for(const dy of [-22,22])tree(cx+dx,cy+dy,1.2);
@@ -56,7 +61,7 @@ for(let row=0;row<4;row++)for(let col=0;col<4;col++){
  }else{
    for(let a=0;a<2;a++)for(let b=0;b<2;b++){
      const s=seed*7+a*3+b,px=x+6+a*34,py=y+6+b*34;
-     const central=col>=1&&col<=2&&row>=1&&row<=2;
+     const central=Math.abs(col-MID)<=1.5&&Math.abs(row-MID)<=1.5;
      const h=central?30+(s*13%31):13+(s*11%24);
      building(px,py,24+(s%3),24+((s+1)%3),h,s);
    }
@@ -66,7 +71,7 @@ for(let row=0;row<4;row++)for(let col=0;col<4;col++){
  const lx=x+35,ly=y-1;add(lx,ly,`<g class="street-light">${line([[lx,ly,1],[lx,ly,8],[lx,ly-3,8]],{tone:'mid'})}${S(k.cylinder(lx,ly-3,1.3,8,.65,P,10))}</g>`);
 }
 // An outer planted verge gives the road network a clean model edge.
-for(const p of [-154,-58,38,134]){tree(-210,p,.8);tree(210,p,.8);tree(p,-210,.8);tree(p,210,.8);}
+for(const p of GRID.slice(0,-1).map(g=>g+38)){tree(-HALF+6,p,.8);tree(HALF-6,p,.8);tree(p,-HALF+6,.8);tree(p,HALF-6,.8);}
 objects.sort((a,b)=>a.depth-b.depth);
 const traffic=cityTraffic();
 const carMarkup=traffic.cars.map((c,i)=>`<g class="city-car car-${c.color}" data-car="${i}" aria-hidden="true"><path data-car-part="shadow"/><path data-car-part="side"/><path data-car-part="top"/><path data-car-part="edge"/><path data-car-part="cabin-side"/><path data-car-part="cabin-top"/><path data-car-part="glass"/><path data-car-part="lights"/><path data-car-part="tail"/></g>`).join('');

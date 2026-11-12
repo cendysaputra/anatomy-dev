@@ -1,5 +1,7 @@
 // Closed, tangent-continuous road loops. Cars keep to the right-hand lane.
-export const GRID=[-192,-96,0,96,192];
+// BLOCKS × BLOCKS city blocks, 96 units apart, centred on the origin.
+export const BLOCKS=7;
+export const GRID=Array.from({length:BLOCKS+1},(_,i)=>(i-BLOCKS/2)*96);
 export function roundedLoop(left,top,right,bottom,radius=8){
   const width=right-left,height=bottom-top;
   if(width<=2*radius||height<=2*radius||radius<=0)throw new Error('Invalid road loop');
@@ -25,7 +27,7 @@ export function sample(loop,distance){
 }
 export function cityTraffic(){
   const loops=[],cars=[];
-  for(let row=0;row<4;row++)for(let col=0;col<4;col++){
+  for(let row=0;row<BLOCKS;row++)for(let col=0;col<BLOCKS;col++){
     const loop=roundedLoop(GRID[col]+4.5,GRID[row]+4.5,GRID[col+1]-4.5,GRID[row+1]-4.5);
     const index=loops.push(loop)-1,speed=11+(index*7%6);
     for(let i=0;i<2;i++)cars.push({loop:index,speed,offset:loop.length*((index*.137+i*.5)%1),color:(index+i*2)%5});
