@@ -7,7 +7,7 @@ import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as k from "../kit/iso-kit.mjs";
-import { chromeCss, chromeHtml } from "../scripts/chrome.mjs";
+import { chromeCss, chromeHtml, footerHtml } from "../scripts/chrome.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const theme = process.argv.includes("--light") ? "light" : "dark";
@@ -35,24 +35,20 @@ function climb(start) {
 }
 
 // ---------- the world ----------
-const WIDTH = 620;
-const HEIGHT = 330;
+const WIDTH = 1000;
+const HEIGHT = 400;
 const STEP = 10;
 const XS = F.map((_, j) => (j - (N - 1) / 2) * STEP);
 const BED_TOP = 6;
-const COLLAR_H = 2;
 const TOP = F.map((f) => BED_TOP + f);
 
-const PLATE = { x: -142, y: -38, w: 284, d: 84, r: 8 };
+const PLATE = { x: -132, y: -24, w: 264, d: 70, r: 8 };
 const PLATE_H = 10;
 const FOOT_H = 5;
 const BED = { x: XS[0] - 8, y: -11, w: XS[N - 1] - XS[0] + 16, d: 22, r: 2 };
 const STRIP = { x: XS[0] - 6, y: 30, w: XS[N - 1] - XS[0] + 12, d: 7, r: 1 };
-const FENCE = { x: XS[0] - 8, y: -27, w: XS[N - 1] - XS[0] + 16, d: 6, r: 1.2 };
-const LABEL = { x: 114, y: 20, w: 22, d: 18, r: 1.4 };
 const STOP_W = 8;
 const STOP_H = 12;
-const KNOB = [XS[N - 1] + 8 + STOP_W / 2, 0];
 
 const P = k.fitProjection(
   [
@@ -61,7 +57,7 @@ const P = k.fitProjection(
   ],
   WIDTH,
   HEIGHT,
-  { pad: 22, azimuth: 62 },
+  { pad: 14, azimuth: 62 },
 );
 
 const at = (point) => k.iso(point, P);
@@ -79,38 +75,17 @@ function plate() {
   out.push(S(k.slabOf(PLATE, -PLATE_H, PLATE_H, P, 8, 1.6), { tone: "mid" }));
   out.push(L(k.planOutline(k.insetPlan(PLATE, 5), 0, P), { tone: "lo" }));
   const screws = k.corners(PLATE, 10);
-  out.push(L(screws.map(([x, y]) => k.ring(x, y, 2.2, 0, P, 16)).join(""), { tone: "lo" }));
   out.push(D(screws.map(([x, y]) => at([x, y, 0])), { size: 0.5 }));
-  return out.join("");
-}
-
-function fence() {
-  // A back fence the bed is squared against, with its own screws.
-  const out = [];
-  out.push(S(k.slabOf(FENCE, 0, 5, P, 4, 0.5), { tone: "mid" }));
-  out.push(D([-90, -45, 0, 45, 90].map((x) => at([x, FENCE.y + FENCE.d / 2, 5])), { size: 0.42, tone: "lo" }));
   return out.join("");
 }
 
 function ruler() {
   // Ruler strip along the front: one tick per state, a major tick every fifth.
   const out = [];
-  out.push(S(k.slabOf(STRIP, 0, 0.6, P, 3), { tone: "lo", crease: "none" }));
-  const ticks = k.topTicks(XS[0], XS[N - 1], STEP, 5, STRIP.y + 0.8, 0.6, [2.2, 4], P);
+  out.push(S(k.slabOf(STRIP, 0, 0.6, P, 3), { tone: "lo" }));
+  const ticks = k.topTicks(XS[0], XS[N - 1], STEP, 5, STRIP.y, 0.6, [2.6, 7], P);
   out.push(L(ticks.minor, { tone: "lo" }), L(ticks.major, { tone: "mid" }));
   out.push(D([at([STRIP.x + 2, STRIP.y + 5, 0.6]), at([STRIP.x + STRIP.w - 2, STRIP.y + 5, 0.6])], { size: 0.45 }));
-  return out.join("");
-}
-
-function label() {
-  const out = [];
-  out.push(S(k.slabOf(LABEL, 0, 0.8, P, 4), { tone: "mid", crease: "none" }));
-  out.push(L(k.planOutline(k.insetPlan(LABEL, 1.6), 0.8, P), { tone: "faint" }));
-  out.push(k.faceTextSvg(k.topMatrix([LABEL.x + 3.4, LABEL.y + 6.2], 0.8, P, "x"), "f(x)", { size: 3.2, tone: "lo" }));
-  for (const [y, w] of [[10.5, 15], [13, 11], [15.5, 13]]) {
-    out.push(L(k.lineOnTop([LABEL.x + 3.4, LABEL.y + y], [LABEL.x + 3.4 + w, LABEL.y + y], 0.8, P), { tone: "lo", free: true }));
-  }
-  out.push(D([at([LABEL.x + LABEL.w - 2.6, LABEL.y + 2.6, 0.8]), at([LABEL.x + LABEL.w - 2.6, LABEL.y + LABEL.d - 2.6, 0.8])], { size: 0.42 }));
   return out.join("");
 }
 
@@ -124,28 +99,19 @@ function bed() {
   return out.join("");
 }
 
-function endStop(x0, knob) {
+function endStop(x0) {
   const plan = { x: x0, y: -12, w: STOP_W, d: 24, r: 1.4 };
   const out = [S(k.slabOf(plan, 0, STOP_H, P, 3, 0.5), { tone: "mid" })];
   out.push(D([at([x0 + STOP_W / 2, -8, STOP_H]), at([x0 + STOP_W / 2, 8, STOP_H])], { size: 0.45 }));
-  if (knob) {
-    const [kx, ky] = KNOB;
-    out.push(S(k.cylinder(kx, ky, 3.6, STOP_H, 4, P, 28), { tone: "mid" }));
-    out.push(L(k.knurl(kx, ky, 3.6, STOP_H, STOP_H + 4, 24, P), { tone: "lo" }));
-    out.push(L(k.lineOnTop([kx, ky], [kx + 3.6, ky], STOP_H + 4, P), { tone: "hi" }));
-    out.push(D([at([kx, ky, STOP_H + 4])], { size: 0.5, tone: "hi" }));
-  }
   return out.join("");
 }
 
 function pin(j) {
   const x = XS[j];
   const out = [];
-  const collar = { x: x - 4.4, y: -8, w: 8.8, d: 16, r: 1 };
-  out.push(S(k.slabOf(collar, BED_TOP, COLLAR_H, P, 3, 0.4), { tone: "mid" }));
   const shaft = { x: x - 3.4, y: -6.6, w: 6.8, d: 13.2, r: 0.8 };
   const top = TOP[j];
-  out.push(S(k.slabOf(shaft, BED_TOP + COLLAR_H, top - BED_TOP - COLLAR_H, P, 3, 0.5), { tone: "hi", crease: "lo" }));
+  out.push(S(k.slabOf(shaft, BED_TOP, top - BED_TOP, P, 3, 0.5), { tone: "hi", crease: "lo" }));
   out.push(L(k.planOutline(k.insetPlan(shaft, 1.6), top, P, 3), { tone: j === GLOBAL ? "mid" : "faint" }));
   return out.join("");
 }
@@ -185,16 +151,14 @@ const svg = k.figureSvg({
     "An instrument that runs hill climbing. Twenty-one gauge pins stand in a row on a bed; each pin's height is the value of one state. A small climber stands on one pin, feels the two neighbouring pins with two feelers and hops to the taller one while it is taller than its own. When no neighbour is taller it stops and raises a flag. Started left of the valley it stops on the lower hill, a local maximum; started right of it, it reaches the tallest pin.",
   body: [
     plate(),
-    fence(),
     ruler(),
-    label(),
     bed(),
     `<g data-part="row">`,
-    endStop(XS[0] - 8 - STOP_W, false),
+    endStop(XS[0] - 8 - STOP_W),
     ...F.map((_, j) => `<g data-pin="${j}">${pin(j)}</g>`),
     `<g data-part="climber" transform="${k.translateAlong(P, [XS[START], 0, TOP[START]])}">${climber()}<g data-part="flag">${flag()}</g></g>`,
     `</g>`,
-    endStop(XS[N - 1] + 8, true),
+    endStop(XS[N - 1] + 8),
     `<g data-part="marker" transform="${k.translateAlong(P, [XS[START], 0, 0])}">${S(k.slabOf({ x: -2.4, y: STRIP.y - 3.2, w: 4.8, d: 3.2, r: 0.6 }, 0, 2.4, P, 2, 0.3), { tone: "mid" })}${D([at([0, STRIP.y - 1.6, 2.4])], { size: 0.45, tone: "hi" })}</g>`,
     `<g data-part="trail"></g>`,
     `<g data-part="feelers"></g>`,
@@ -338,20 +302,27 @@ stage.addEventListener("keydown", (event) => {
 draw(0);
 `;
 
-const body = `<style>${chromeCss()}</style>${chromeHtml({ active: "hill", theme })}${k.plateHtml({
-  fig: "Fig 1",
-  title: "Hill climbing",
-  hint: "Arahkan kursor: pilih titik awal",
-  readout: `awal ${START} · langkah 0 · f(${START})=${F[START]} · cek tetangga`,
-  keys: [
-    { mark: "lit", label: "Pendaki: state saat ini" },
-    { mark: "raised", label: "21 pin: tinggi = nilai f(x) tiap state" },
-    { mark: "dim", label: "Sungut: mengukur dua tetangga" },
-  ],
-  caption:
-    `Hill climbing: dari state sekarang, bandingkan tetangga kiri dan kanan, pindah ke yang lebih tinggi, ulangi sampai tak ada tetangga yang lebih tinggi. Mulai di x 0–9 dan pendaki berhenti di puncak lokal x=5 (f = 46); mulai di x 10–20 dan ia mencapai puncak global x=16 (f = 70). Algoritmanya cepat dan hemat memori, tapi tak pernah turun, jadi bisa terjebak.`,
-  body: `<div class="iso-stage" tabindex="0" role="slider" aria-label="Hill climbing: panah kiri/kanan memilih titik awal, Enter mengulang" aria-valuemin="0" aria-valuemax="${N - 1}" aria-valuenow="${START}">${svg}</div>`,
-})}`;
+const CSS = `
+.hc-stage{margin:8px calc(var(--gutter)*-1) 0;padding:0 var(--gutter);outline:none;cursor:crosshair}
+.hc-stage .iso-svg{width:100%;max-height:74vh;margin:0 auto}
+.hc-bar{display:flex;justify-content:space-between;align-items:baseline;gap:24px;padding:14px 0;border-top:1px solid var(--anatomy-faint);border-bottom:1px solid var(--anatomy-faint);font-size:14px}
+.hc-hint{color:var(--anatomy-muted)}
+.hc-readout{font:400 14px var(--mono);color:var(--anatomy-strong);font-variant-numeric:tabular-nums;text-align:right}
+.hc-notes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:40px;padding-top:32px}
+.hc-notes h2{margin:0 0 6px;font:500 15px var(--heading);color:var(--anatomy-strong)}
+.hc-notes p{margin:0;font-size:15px}
+@media(max-width:760px){.hc-stage{overflow:hidden}.hc-stage .iso-svg{width:150%;max-width:none;max-height:none;margin-left:-25%}.hc-bar{flex-direction:column;gap:4px}.hc-readout{text-align:left}.hc-notes{grid-template-columns:1fr;gap:22px}}
+`;
+const body = `<style>${chromeCss()}${CSS}</style>${chromeHtml({ active: "hill", theme })}
+<section aria-label="Ilustrasi hill climbing">
+<div class="iso-stage hc-stage" tabindex="0" role="slider" aria-label="Hill climbing: panah kiri/kanan memilih titik awal, Enter mengulang" aria-valuemin="0" aria-valuemax="${N - 1}" aria-valuenow="${START}">${svg}</div>
+<div class="hc-bar"><span class="hc-hint">Arahkan kursor ke gambar untuk memilih titik awal. Klik untuk mengulang.</span><span class="hc-readout" data-readout>awal ${START} · langkah 0 · f(${START})=${F[START]} · cek tetangga</span></div>
+<div class="hc-notes">
+<div><h2>Lanskap</h2><p>21 pin, satu per state. Tinggi pin adalah nilai f(x) yang ingin dimaksimalkan.</p></div>
+<div><h2>Langkah</h2><p>Pendaki mengukur dua tetangganya dan pindah ke yang lebih tinggi. Tidak ada yang lebih tinggi? Berhenti.</p></div>
+<div><h2>Jebakan</h2><p>Mulai di x 0–9, ia berhenti di puncak lokal x=5 (f=46). Mulai di x 10–20, ia sampai ke puncak global x=16 (f=70).</p></div>
+</div>
+</section>${footerHtml()}`;
 
 const out = theme === "light" ? "hill-climbing-light.html" : "hill-climbing.html";
 writeFileSync(join(HERE, out), k.pageHtml({ title: "Hill Climbing Algorithm", theme, width: 1200, body, script: 'import { iso, depthOf, translateAlong, pathOf } from "/kit/iso-kit.mjs";\n' + live }));

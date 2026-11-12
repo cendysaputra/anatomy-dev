@@ -1,33 +1,33 @@
-// Minimal shared frame; diagrams and controls carry the page.
+// Shared full-width frame. No cards, no boxes: a hairline header, a title row, then the figure.
 export function chromeCss() {
   return `
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Manrope:wght@400;500;600;700&display=swap');
-:root{--heading:'IBM Plex Sans',sans-serif;--body:'Manrope',sans-serif;--accent:#b85b39}
-body.iso{font:400 16px/1.7 var(--body)}
-.iso[data-theme="light"]{--anatomy-page:#fff;--anatomy-strong:#252825;--anatomy-text:#646864;--anatomy-muted:#858a84;--anatomy-card:#fff;--anatomy-paper:#fafbf9;--anatomy-top:#fff;--anatomy-mid:#879181;--anatomy-hi:#485443;--anatomy-lo:#b5bdb0;--anatomy-faint:#e9ece6}
-.iso-page{width:min(1120px,100% - 80px);margin:0 auto 40px}
-.site-header{display:flex;align-items:center;justify-content:space-between;gap:28px;padding:28px 0;border-bottom:1px solid var(--anatomy-faint)}
-.brand{color:var(--anatomy-strong);text-decoration:none;font:500 19px var(--heading);letter-spacing:-.04em;white-space:nowrap}
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400&family=Manrope:wght@400;500;600&display=swap');
+:root{--heading:'IBM Plex Sans',sans-serif;--body:'Manrope',sans-serif;--mono:'IBM Plex Mono',ui-monospace,monospace;--accent:#b85b39;--gutter:clamp(16px,4vw,56px)}
+body.iso{font:400 16px/1.65 var(--body)}
+.iso[data-theme="light"]{--anatomy-page:#fff;--anatomy-strong:#1d1f1c;--anatomy-text:#555a54;--anatomy-muted:#868b84;--anatomy-card:#fff;--anatomy-paper:#fff;--anatomy-top:#fff;--anatomy-mid:#879181;--anatomy-hi:#3f4a3b;--anatomy-lo:#b5bdb0;--anatomy-faint:#e7e9e4}
+.iso[data-theme="dark"]{--anatomy-page:#0e0f0e;--anatomy-card:#0e0f0e;--anatomy-paper:#0e0f0e;--anatomy-faint:#242624}
+.iso-page{width:100%;margin:0;padding:0 var(--gutter) 40px}
+.site-header{display:flex;align-items:center;justify-content:space-between;gap:24px;height:64px;margin:0 calc(var(--gutter)*-1);padding:0 var(--gutter);border-bottom:1px solid var(--anatomy-faint)}
+.brand{color:var(--anatomy-strong);text-decoration:none;font:500 17px var(--heading);letter-spacing:-.03em;white-space:nowrap}
 .brand span{font-weight:400;color:var(--anatomy-muted)}
-.iso-nav{display:flex;gap:26px;align-items:center}
-.iso-nav a{color:var(--anatomy-muted);font-size:13px;text-decoration:none;transition:color .2s}
+.iso-nav{display:flex;gap:24px}
+.iso-nav a{color:var(--anatomy-muted);font-size:14px;text-decoration:none}
 .iso-nav a:hover,.iso-nav a[aria-current="page"]{color:var(--anatomy-strong)}
-.iso-nav a[aria-current="page"]{text-decoration:underline;text-underline-offset:6px;text-decoration-thickness:1px}
-.page-intro{padding:44px 0 22px}
-.iso-page h1{margin:0 0 10px;color:var(--anatomy-strong);font:400 36px/1.2 var(--heading);letter-spacing:-.04em}
-.intro-copy{margin:0;max-width:650px;font-size:16px;line-height:1.8}
-.iso-plate{background:transparent;box-shadow:none}.iso{--anatomy-weight:.85px}.iso-halo{filter:blur(10px);opacity:.16}
-.iso-legend{font:400 16px/1.8 var(--body)}.iso-plate-corner{font-size:11px}.iso-figure{margin-top:14px}
-.site-footer{display:flex;justify-content:flex-end;margin-top:38px;padding-top:18px;font-size:11px;color:var(--anatomy-muted)}
-a{color:inherit}button,select,input{font:inherit}button,a,select,input{touch-action:manipulation}button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:5px}
-@media(max-width:800px){.iso-page{width:calc(100% - 48px)}.page-intro{padding:34px 0 18px}}
-@media(max-width:480px){.iso-page{width:calc(100% - 32px)}.site-header{padding:21px 0;gap:20px}.iso-nav{gap:17px}.iso-nav a{font-size:11px}.brand{font-size:17px}.iso-page h1{font-size:30px}.page-intro{padding-top:30px}}
+.page-intro{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;align-items:end;padding:56px 0 8px}
+.iso-page h1{margin:0;color:var(--anatomy-strong);font:400 clamp(34px,4.4vw,56px)/1.05 var(--heading);letter-spacing:-.045em}
+.intro-copy{margin:0;max-width:46ch;justify-self:end;color:var(--anatomy-text)}
+.iso{--anatomy-weight:.85px}.iso-halo{filter:blur(10px);opacity:.16}
+.site-footer{display:flex;justify-content:space-between;gap:16px;margin:56px calc(var(--gutter)*-1) -40px;padding:18px var(--gutter);border-top:1px solid var(--anatomy-faint);font-size:13px;color:var(--anatomy-muted)}
+.site-footer a{color:inherit}
+a{color:inherit}button,select,input{font:inherit}button,a,select,input{touch-action:manipulation}
+:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
+@media(max-width:760px){.page-intro{grid-template-columns:1fr;gap:14px;padding-top:36px}.intro-copy{justify-self:start}.iso-nav{gap:16px}.iso-nav a{font-size:13px}}
 `;
 }
 export function chromeHtml({ active, theme = 'light' }) {
   const hrefs = theme === 'dark' ? { hill:'/dark', lb:'/load-balancer/dark' } : { hill:'/', lb:'/load-balancer' };
   const link=(id,label)=>`<a href="${hrefs[id]}"${active===id?' aria-current="page"':''}>${label}</a>`;
   const lb=active==='lb';
-  return `<header class="site-header"><a class="brand" href="/" aria-label="Anatomy Dev beranda">anatomy<span> / dev</span></a><nav class="iso-nav" aria-label="Pilih ilustrasi">${link('hill','Hill climbing')}${link('lb','Load balancing')}</nav></header><section class="page-intro"><h1>${lb?'Load balancing':'Hill climbing'}</h1><p class="intro-copy">${lb?'Lihat bagaimana request dibagi ke beberapa server. Ubah algoritmanya dan coba matikan satu server.':'Bandingkan tetangga, pilih langkah yang lebih tinggi, dan temukan batas dari puncak terdekat.'}</p></section>`;
+  return `<header class="site-header"><a class="brand" href="/" aria-label="Anatomy Dev beranda">anatomy<span> / dev</span></a><nav class="iso-nav" aria-label="Pilih ilustrasi">${link('hill','Hill climbing')}${link('lb','Load balancing')}</nav></header><section class="page-intro"><h1>${lb?'Load balancing':'Hill climbing'}</h1><p class="intro-copy">${lb?'Satu alamat di depan, beberapa server di belakang. Pilih cara membagi request, lalu matikan satu server dan lihat apa yang terjadi.':'Dari posisi sekarang, lihat kiri dan kanan, lalu naik ke yang lebih tinggi. Ulangi sampai tidak ada lagi yang lebih tinggi, entah itu puncak tertinggi atau bukan.'}</p></section>`;
 }
-export function footerHtml(){return `<footer class="site-footer"><a href="https://github.com/wheresryan22/anatomy" target="_blank" rel="noreferrer">Built with Anatomy ↗</a></footer>`;}
+export function footerHtml(){return `<footer class="site-footer"><span>anatomy / dev</span><a href="https://github.com/wheresryan22/anatomy" target="_blank" rel="noreferrer">Dibuat dengan Anatomy ↗</a></footer>`;}
