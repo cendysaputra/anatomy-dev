@@ -92,18 +92,19 @@ function shapeAt(angle){
     [path(projected(bonnetSnow,2.47))+path(projected(bootSnow,2.47)),'snowShade',1],[path(projected(bonnetSnow,2.72))+path(projected(bootSnow,2.68)),'snow',1],
     [path(projected(roofSnow,3.9)),'snowShade',1],[path(projected(roofSnow,4.3)),'snow',1]
   ].map(([d,colour,alpha])=>({shape:new Path2D(d),colour,alpha}));
-  const hull=hullOf([...projected(shadowRing,.12),...projected(bodyRing,.65),...projected(bodyRing,2.45),...projected(cabinRing,3.85),...projected(roofSnow,4.3),...projected(BEAM,.14)].map(([x,y])=>[x-ORIGIN[0],y-ORIGIN[1]]));
-  return shapes[key]={key,parts,hull,x0:Math.min(...hull.xs)-SLACK,y0:Math.min(...hull.ys)-SLACK,x1:Math.max(...hull.xs)+SLACK,y1:Math.max(...hull.ys)+SLACK};
+  const hull=hullOf([...projected(shadowRing,.12),...projected(bodyRing,.65),...projected(bodyRing,2.45),...projected(cabinRing,3.85),...projected(roofSnow,4.3),...projected(BEAM,.14),...projected([[11,-6],[11,6],[-8.6,-5],[-8.6,5]],2.48),...projected([[5.3,0]],8.5)].map(([x,y])=>[x-ORIGIN[0],y-ORIGIN[1]]));
+  const lamps=[...projected([[5.3,-1.65],[5.3,1.65]],2.48).map(([x,y])=>({x,y,tone:4,size:5.5})),...projected([[-5.3,-1.65],[-5.3,1.65]],2.48).map(([x,y])=>({x,y,tone:5,size:3.2}))];
+  return shapes[key]={key,parts,lamps,hull,x0:Math.min(...hull.xs)-SLACK,y0:Math.min(...hull.ys)-SLACK,x1:Math.max(...hull.xs)+SLACK,y1:Math.max(...hull.ys)+SLACK};
 }
 // Christmas-tree lights twinkle on this canvas rather than in the SVG, so the map never repaints.
 // Each decorated tree becomes a group of glows placed over its baubles and star.
-const GLOWS=['#ff5b4d','#ffd35a','#fff6dc','#ffe27a'];
+const GLOWS=['#ff4a4a','#ffd84a','#fff3d0','#ffe27a','#ffe9a8','#ff3b2f'];
 const garlands=props.filter(p=>p.node.querySelector('.bauble')).map((prop,index)=>{
   const bulbs=[];
-  [0,1,2].forEach(tone=>{for(const c of prop.node.querySelectorAll('.bauble-'+tone+' circle'))bulbs.push({x:+c.getAttribute('cx'),y:+c.getAttribute('cy'),tone,size:5,phase:bulbs.length*2.4+index,rate:1.6+(bulbs.length%5)*.45});});
+  [0,1,2].forEach(tone=>{for(const c of prop.node.querySelectorAll('.bauble-'+tone+' circle'))bulbs.push({x:+c.getAttribute('cx'),y:+c.getAttribute('cy'),tone,size:8,phase:bulbs.length*2.4+index,rate:1.6+(bulbs.length%5)*.45});});
   const star=prop.node.querySelector('.xmas-star').getBBox();
-  bulbs.push({x:star.x+star.width/2,y:star.y+star.height/2,tone:3,size:13,phase:index,rate:1.1});
-  const xs=bulbs.map(b=>b.x),ys=bulbs.map(b=>b.y),x0=Math.min(...xs)-13,y0=Math.min(...ys)-13,x1=Math.max(...xs)+13,y1=Math.max(...ys)+13;
+  bulbs.push({x:star.x+star.width/2,y:star.y+star.height/2,tone:3,size:24,phase:index,rate:1.1});
+  const xs=bulbs.map(b=>b.x),ys=bulbs.map(b=>b.y),x0=Math.min(...xs)-24,y0=Math.min(...ys)-24,x1=Math.max(...xs)+24,y1=Math.max(...ys)+24;
   return {depth:prop.depth,bulbs,x:0,y:0,shape:{hull:hullOf([[x0,y0],[x1,y0],[x1,y1],[x0,y1]]),x0,y0,x1,y1}};
 });
 // One soft dot per colour, redrawn only when the zoom changes.
@@ -112,14 +113,20 @@ function glowSprite(colour,k){
   const R=Math.max(4,Math.ceil(16*k)),image=document.createElement('canvas');image.width=image.height=R*2;
   const g=image.getContext('2d'),fade=g.createRadialGradient(R,R,0,R,R,R);
   fade.addColorStop(0,'#fff');fade.addColorStop(.14,colour);fade.addColorStop(.45,colour+'55');fade.addColorStop(1,colour+'00');
-  g.fillStyle=fade;g.fillRect(0,0,R*2,R*2);return image;
+  g.fillStyle=fade;g.fillRect(0,0,R*2,R*2);
+  // Two thin streaks through the centre give the dot a lens-flare sparkle.
+  g.globalCompositeOperation='lighter';
+  for(const [sx,sy] of [[1,.06],[.06,.8]]){
+    const streak=g.createRadialGradient(0,0,0,0,0,R);streak.addColorStop(0,'#ffffffcc');streak.addColorStop(.3,colour+'88');streak.addColorStop(1,colour+'00');
+    g.save();g.translate(R,R);g.scale(sx,sy);g.fillStyle=streak;g.beginPath();g.arc(0,0,R,0,Math.PI*2);g.fill();g.restore();
+  }
+  return image;
 }
 function paintGarland(garland,k,left,top){
-  if(glowScale!==k){glowScale=k;glowSprites=GLOWS.map(colour=>glowSprite(colour,k));}
   ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation='lighter';
   for(const bulb of garland.bulbs){
     const pulse=.5+.5*Math.sin(clock*bulb.rate+bulb.phase),half=bulb.size*k*(.75+.25*pulse);
-    ctx.globalAlpha=.3+.7*pulse;
+    ctx.globalAlpha=.45+.55*pulse;
     ctx.drawImage(glowSprites[bulb.tone],left+bulb.x*k-half,top+bulb.y*k-half,half*2,half*2);
   }
   ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
@@ -132,6 +139,7 @@ function paintParts(g,shape,livery){
     else{g.fillStyle=livery[part.colour]??paint[part.colour];g.fill(part.shape);}
   }
   g.globalAlpha=1;
+  for(const lamp of shape.lamps)g.drawImage(glowSprites[lamp.tone],lamp.x-lamp.size,lamp.y-lamp.size,lamp.size*2,lamp.size*2);
 }
 // A car driving straight keeps one of four headings, so it is drawn once per colour into a small
 // image and stamped each frame; only cars in the middle of a turn are drawn as paths.
@@ -170,6 +178,7 @@ function draw(){
   const k=scale*dpr,left=-view.x*k,top=-view.y*k;
   ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);
   ctx.lineJoin='round';
+  if(glowScale!==k){glowScale=k;glowSprites=GLOWS.map(colour=>glowSprite(colour,k));stamps.clear();}
   for(const car of cars)place(car);
   const lit=garlands.filter(g=>g.shape.x1>view.x&&g.shape.x0<view.x+view.width&&g.shape.y1>view.y&&g.shape.y0<view.y+view.height);
   // Far to near: paint a car or a tree's lights, then cut away whatever stands in front of it.

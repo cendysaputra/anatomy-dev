@@ -31,6 +31,8 @@ function heap(cx,cy,rx,ry,seed,scale=1){const next=seeded(seed);return Array.fro
 // A snow sheet with visible thickness: its lower outline in shade, its top in white.
 const snowSheet=(p,z,seed,depth=.7)=>{const ring=drifted(p,seed);return `<path class="snow-side snow-cut" d="${flat(ring,z)}"/><path class="snow-top snow-cut" d="${flat(ring,z+depth)}"/>`;};
 let snowSides='',snowTops='',lampPools='';
+// A thin diamond: with a radial fill it reads as one streak of a lens flare.
+const flare=(x,y,rx,ry)=>poly([[x-rx,y],[x,y-ry],[x+rx,y],[x,y+ry]]);
 function snowHeap(cx,cy,rx,ry,seed,height=.6){snowSides+=flat(heap(cx,cy,rx,ry,seed),.25);snowTops+=flat(heap(cx,cy,rx,ry,seed,height?.8:1),.25+height);}
 function cone(x,y,r,z0,h,kind='cone'){
  const ring=Array.from({length:28},(_,i)=>{const a=i/28*Math.PI*2;return [x+Math.cos(a)*r,y+Math.sin(a)*r];});
@@ -79,7 +81,7 @@ function building(x,y,w,d,h,seed){
    const bulb=(x,y)=>{const [px,py]=at([x,y,h+.1]);bulbs[n++%4]+='M'+px.toFixed(1)+' '+py.toFixed(1)+'l0 0';};
    for(let q=1.5;q<=tower.w-1.5;q+=3)bulb(tower.x+q,tower.y+tower.d);
    for(let q=tower.d-3;q>=1.5;q-=3)bulb(tower.x+tower.w,tower.y+q);
-   out+=`<path class="fairy-glow" d="${bulbs.join('')}"/>`+bulbs.map((d,i)=>`<path class="fairy fairy-${i}" d="${d}"/>`).join('');
+   out+=bulbs.map((d,i)=>`<path class="fairy-glow fairy-${i}" d="${d}"/>`).join('')+bulbs.map((d,i)=>`<path class="fairy fairy-${i}" d="${d}"/>`).join('')+`<path class="fairy-core" d="${bulbs.join('')}"/>`;
  }
  out+=snowSheet(k.insetPlan({...tower,r:3.5},.7),h+1,seed*3+2);
  if(seed%3===0){out+=`<g class="roof-machine">${slab(plan(tower.x+3,tower.y+3,5,7,1),h+1,2.2)}</g>`;out+=line([[tower.x+4,tower.y+5,h+3.2],[tower.x+7,tower.y+5,h+3.2]],{tone:'lo'});}
@@ -110,6 +112,7 @@ for(let row=0;row<BLOCKS;row++)for(let col=0;col<BLOCKS;col++){
  if(PARKS.has(row+','+col)){
    ground.push(`<path class="park-ground" d="${top(plan(x+2,y+2,66,66,3),1.05)}"/><path class="park-path" d="${top(plan(cx-3,y+2,6,66,0),1.1)+top(plan(x+2,cy-3,66,6,0),1.1)}"/>`);
    for(const [dx,dy,i] of [[-18,-18,0],[18,-17,1],[-17,18,2],[18,18,3]])snowHeap(cx+dx,cy+dy,11,10,seed*17+i,0);
+   lampPools+=`<path class="tree-pool" d="${flat(k.circleRing(cx,cy,30,24),1.12)}"/>`;
    pine(cx,cy,1.5,true);
    for(const dx of [-22,22])for(const dy of [-22,22])pine(cx+dx,cy+dy,1.2);
    for(const [dx,dy] of [[-20,2],[20,-2]])add(cx+dx,cy+dy,slab(plan(cx+dx-4,cy+dy-1,8,2,0),1,2));
@@ -131,19 +134,19 @@ for(let row=0;row<BLOCKS;row++)for(let col=0;col<BLOCKS;col++){
  // A slim street light on every block, set back from the carriageway.
  const lx=x+35,ly=y-1,[hx,hy]=at([lx,ly-3,8.3]);
  lampPools+=`<path d="${flat(k.circleRing(lx,ly-4,15,20),.3)}"/>`;
- add(lx,ly,`<g class="street-light">${line([[lx,ly,1],[lx,ly,8],[lx,ly-3,8]],{tone:'mid'})}${S(k.cylinder(lx,ly-3,1.3,8,.65,P,10))}<circle class="lamp-halo" cx="${hx.toFixed(1)}" cy="${hy.toFixed(1)}" r="7"/></g>`);
+ add(lx,ly,`<g class="street-light">${line([[lx,ly,1],[lx,ly,8],[lx,ly-3,8]],{tone:'mid'})}${S(k.cylinder(lx,ly-3,1.3,8,.65,P,10))}<circle class="lamp-halo" cx="${hx.toFixed(1)}" cy="${hy.toFixed(1)}" r="12"/><path class="lamp-flare" d="${flare(hx,hy,24,1.1)}"/><path class="lamp-flare" d="${flare(hx,hy,1,15)}"/></g>`);
 }
 // An outer planted verge gives the road network a clean model edge.
 for(const p of GRID.slice(0,-1).map(g=>g+38)){tree(-HALF+6,p,.8);tree(HALF-6,p,.8);tree(p,-HALF+6,.8);tree(p,HALF-6,.8);}
 ground.push(`<path class="snow-side" d="${snowSides}"/><path class="snow-top snow-ground" d="${snowTops}"/><g class="lamp-pool">${lampPools}</g>`);
 const glow=(id,colour,stops)=>`<radialGradient id="${id}">${stops.map(([at,alpha])=>`<stop offset="${at}" stop-color="${colour}" stop-opacity="${alpha}"/>`).join('')}</radialGradient>`;
-const defs=`<defs>${glow('lamp-pool','#ffd98a',[[0,.42],[.45,.2],[1,0]])}${glow('lamp-halo','#ffe7ad',[[0,.95],[.25,.55],[1,0]])}</defs>`;
+const defs=`<defs>${glow('lamp-pool','#ffd98a',[[0,.6],[.4,.3],[1,0]])}${glow('lamp-halo','#ffeebd',[[0,1],[.12,.9],[.35,.4],[1,0]])}${glow('tree-pool','#ffc76b',[[0,.5],[.5,.2],[1,0]])}</defs>`;
 objects.sort((a,b)=>a.depth-b.depth);
 const traffic=cityTraffic();
 const fig=k.figureSvg({width:W,height:H,label:`Miniatur kota isometrik berisi ${buildings} gedung, taman, jalan dua arah, dan ${traffic.cars.length} mobil yang bergerak otomatis dalam lintasan looping.`,body:[defs,...ground,`<g id="city-scene">${objects.map((o,i)=>`<g data-city-object="${i}" data-depth="${o.depth.toFixed(6)}" data-kind="${o.kind}">${o.body}</g>`).join('')}</g>`]});
 // The sidebar starts minimised on this page so the map is unobstructed; a button opens it.
 const menuButton='<button class="menu-toggle" type="button" aria-controls="city-nav" aria-expanded="false" aria-label="Buka menu"><svg class="icon-open" viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 6h13M3.5 10h13M3.5 14h13"/></svg><svg class="icon-close" viewBox="0 0 20 20" aria-hidden="true"><path d="M11.5 5.5L7 10l4.5 4.5M15 5.5L10.5 10l4.5 4.5"/></svg></button>';
-const chrome=chromeHtml({active:'city'}).replace('<header class="site-header">','<header class="site-header is-min">'+menuButton).replace('<nav class="iso-nav"','<nav id="city-nav" class="iso-nav"');
+const chrome=chromeHtml({active:'city'}).replace('<section class="page-intro">','<section class="page-intro visually-hidden">').replace('<header class="site-header">','<header class="site-header is-min">'+menuButton).replace('<nav class="iso-nav"','<nav id="city-nav" class="iso-nav"');
 const body=`<style>${chromeCss()}</style><link rel="stylesheet" href="/city/style.css">${chrome}<figure class="city-figure"><div class="city-stage" tabindex="0" role="region" aria-label="Peta kota: seret atau pakai tombol panah untuk bergeser">${fig}</div></figure><script id="city-config" type="application/json">${JSON.stringify({projection:P,buildings,cars:traffic.cars.length})}</script>${footerHtml()}`;
 let html=k.pageHtml({title:'City',theme:'dark',width:1280,body});
 html=html.replace('<html lang="en">','<html lang="id">').replace('</head>','<meta name="description" content="Miniatur kota dengan sudut isometrik Anatomy, dengan puluhan gedung dan mobil yang bergerak looping otomatis."></head>').replace('</body>','<script type="module" src="/city/app.mjs"></script></body>');

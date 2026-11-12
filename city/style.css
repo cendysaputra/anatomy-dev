@@ -70,3 +70,12 @@ body.iso:has(.city-stage){--anatomy-page:#070c18;--surface:rgba(16,23,40,.94);--
 body:has(.city-stage) .site-header.is-min{width:max-content;height:auto;flex-direction:row;align-items:center;gap:6px;padding:8px 8px 8px 6px;justify-self:start}
 .site-header:not(.is-min) .menu-toggle{position:absolute;top:15px;right:12px}
 @media(max-width:900px){.site-header:not(.is-min) .menu-toggle{top:6px;right:6px}}
+/* No visible heading on this page; it stays in the document for screen readers. */
+.visually-hidden{position:absolute!important;width:1px;height:1px;margin:-1px;padding:0!important;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+/* Brighter lights with flare: stronger window glow, coloured halos on the fairy lights with a
+   white-hot core, and a four-point flare on every street lamp. Still plain fills and strokes. */
+.building-windows.window-lit{stroke:#ffeab0;stroke-width:1.3}.window-glow{stroke:#ffae3d;stroke-width:6;opacity:.3}
+.fairy{stroke-width:2.6}.fairy-glow{stroke-width:8;opacity:.38}.fairy-core{fill:none;stroke:#fff;stroke-width:1;stroke-linecap:round;opacity:.9}
+.fairy-0{stroke:#ff4a4a}.fairy-1{stroke:#ffd84a}.fairy-2{stroke:#3dff95}.fairy-3{stroke:#4ab4ff}
+.lamp-flare{fill:url(#lamp-halo);stroke:none}.lamp-pool .tree-pool{fill:url(#tree-pool)}
+.street-light .iso-top{fill:#fffbe6}
