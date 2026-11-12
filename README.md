@@ -11,6 +11,7 @@ Interactive visual explanations built with the [Anatomy](https://github.com/wher
 | Cache | `/cache` | White canvas |
 | CDN | `/cdn` | White canvas |
 | City | `/city` | Night scene |
+| Keyboard | `/keyboard` | White canvas |
 
 ### Load balancer
 
@@ -60,3 +61,9 @@ Serve the repository root with any static HTTP server and open `/load-balancer/i
 Generated HTML files are committed so Vercel can serve the project directly. When changing a builder or shared layout, rebuild its HTML files before committing. The city addition is on `feature/city-zoom-pan`, based on the latest shared layout.
 
 Anatomy is MIT licensed; see `LICENSE-anatomy`.
+
+### Keyboard
+
+A blank 104-key ANSI mechanical keyboard built with the Anatomy SVG kit. Scroll down to separate keycaps, switches, plate, PCB, foam and case; scroll back to reassemble. The scene has no visible labels or controls. Motion uses projected layer translations and respects reduced-motion preferences.
+
+Rebuild with `node keyboard/build.mjs`. Validate with `node --test keyboard/keyboard.test.mjs`.
