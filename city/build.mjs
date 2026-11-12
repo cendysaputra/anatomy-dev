@@ -90,6 +90,21 @@ function building(x,y,w,d,h,seed){
  add(x+w/2,y+d/2,`<g class="city-building">${out}</g>`,'building');
 }
 const ground=[];
+// The city stands on a frozen lake: frost patches, a pale rim where snow has blown against the
+// base, and long cracks in the ice. A handful of static paths, drawn once with the rest.
+{
+  const next=seeded(4242),far=HALF+520,outside=(x,y)=>Math.abs(x)>HALF+6||Math.abs(y)>HALF+6;
+  let frost='',cracks='',glints='';
+  for(let i=0;i<110;i++){const x=(next()*2-1)*far,y=(next()*2-1)*far;if(outside(x,y))frost+=flat(heap(x,y,28+next()*52,22+next()*40,9000+i),-6);}
+  for(let i=0;i<260;i++){
+    let x=(next()*2-1)*far,y=(next()*2-1)*far,heading=next()*Math.PI*2;if(!outside(x,y))continue;
+    const run=(x0,y0,angle,segments)=>{const points=[[x0,y0]];let px=x0,py=y0,a=angle;for(let n=0;n<segments;n++){a+=(next()-.5)*1.1;const step=14+next()*34;px+=Math.cos(a)*step;py+=Math.sin(a)*step;points.push([px,py]);}return points;};
+    const main=run(x,y,heading,3+Math.floor(next()*4));cracks+=k.pathOf(main.map(([px,py])=>at([px,py,-6])));
+    const [bx,by]=main[1+Math.floor(next()*(main.length-1))];cracks+=k.pathOf(run(bx,by,heading+(next()<.5?1:-1)*(.7+next()*.6),2).map(([px,py])=>at([px,py,-6])));
+    if(i%5===0){const [gx,gy]=at([x,y,-6]);glints+=poly([[gx-7,gy],[gx,gy-.7],[gx+7,gy],[gx,gy+.7]])+poly([[gx-.6,gy],[gx,gy-4],[gx+.6,gy],[gx,gy+4]]);}
+  }
+  ground.push(`<path class="ice-frost" d="${frost}"/><path class="ice-rim" d="${top({x:base.x-16,y:base.y-16,w:base.w+32,d:base.d+32,r:26},-6)}"/><path class="ice-cracks" d="${cracks}"/><path class="ice-glint" d="${glints}"/>`);
+}
 ground.push(`<path class="city-base-shadow" d="${top({...base,x:base.x+4,y:base.y+7},-7)}"/>`,slab(base,-6,6));
 ground.push(`<path class="city-ground" d="${top(k.insetPlan(base,3),.05)}"/>`);
 const R0=-HALF+9,RL=2*HALF-18;

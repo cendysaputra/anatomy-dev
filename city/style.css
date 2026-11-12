@@ -79,3 +79,7 @@ body:has(.city-stage) .site-header.is-min{width:max-content;height:auto;flex-dir
 .fairy-0{stroke:#ff4a4a}.fairy-1{stroke:#ffd84a}.fairy-2{stroke:#3dff95}.fairy-3{stroke:#4ab4ff}
 .lamp-flare{fill:url(#lamp-halo);stroke:none}.lamp-pool .tree-pool{fill:url(#tree-pool)}
 .street-light .iso-top{fill:#fffbe6}
+/* Frozen lake around the city. */
+.city-stage,.city-stage .iso-svg{background:#123650}
+.ice-frost{fill:#cdeafa;opacity:.1}.ice-rim{fill:#6fa8c6;opacity:.5}
+.ice-cracks{fill:none;stroke:#c4e9fb;stroke-width:.8;stroke-linecap:round;stroke-linejoin:round;opacity:.5}.ice-glint{fill:#e9f7ff;opacity:.55}
