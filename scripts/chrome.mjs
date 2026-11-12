@@ -21,13 +21,14 @@ body.iso{font:400 16px/1.7 var(--body)}
 .site-footer{display:flex;justify-content:flex-end;margin-top:38px;padding-top:18px;font-size:11px;color:var(--anatomy-muted)}
 a{color:inherit}button,select,input{font:inherit}button,a,select,input{touch-action:manipulation}button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:5px}
 @media(max-width:800px){.iso-page{width:calc(100% - 48px)}.page-intro{padding:34px 0 18px}}
-@media(max-width:480px){.iso-page{width:calc(100% - 32px)}.site-header{padding:21px 0;gap:20px}.iso-nav{gap:17px}.iso-nav a{font-size:11px}.brand{font-size:17px}.iso-page h1{font-size:30px}.page-intro{padding-top:30px}}
+@media(max-width:480px){.iso-page{width:calc(100% - 32px)}.site-header{padding:21px 0;gap:20px}.site-header{flex-wrap:wrap}.iso-nav{gap:17px;flex-wrap:wrap}.iso-nav a{font-size:11px}.brand{font-size:17px}.iso-page h1{font-size:30px}.page-intro{padding-top:30px}}
 `;
 }
 export function chromeHtml({ active, theme = 'light' }) {
-  const hrefs = theme === 'dark' ? { hill:'/dark', lb:'/load-balancer/dark' } : { hill:'/', lb:'/load-balancer' };
+  const hrefs = theme === 'dark' ? { hill:'/dark', lb:'/load-balancer/dark', cache:'/cache' } : { hill:'/', lb:'/load-balancer', cache:'/cache' };
   const link=(id,label)=>`<a href="${hrefs[id]}"${active===id?' aria-current="page"':''}>${label}</a>`;
   const lb=active==='lb';
-  return `<header class="site-header"><a class="brand" href="/" aria-label="Anatomy Dev beranda">anatomy<span> / dev</span></a><nav class="iso-nav" aria-label="Pilih ilustrasi">${link('hill','Hill climbing')}${link('lb','Load balancing')}</nav></header><section class="page-intro"><h1>${lb?'Load balancing':'Hill climbing'}</h1><p class="intro-copy">${lb?'Lihat bagaimana request dibagi ke beberapa server. Ubah algoritmanya dan coba matikan satu server.':'Bandingkan tetangga, pilih langkah yang lebih tinggi, dan temukan batas dari puncak terdekat.'}</p></section>`;
+  const isCache=active==='cache';
+  return `<header class="site-header"><a class="brand" href="/" aria-label="Anatomy Dev beranda">anatomy<span> / dev</span></a><nav class="iso-nav" aria-label="Pilih ilustrasi">${link('hill','Hill climbing')}${link('lb','Load balancing')}${link('cache','Cache')}</nav></header><section class="page-intro"><h1>${isCache?'Cache':lb?'Load balancing':'Hill climbing'}</h1><p class="intro-copy">${isCache?'Simpan sekali, ambil lebih cepat. Ikuti perjalanan data saat cache masih kosong dan saat sudah terisi.':lb?'Lihat bagaimana request dibagi ke beberapa server. Ubah algoritmanya dan coba matikan satu server.':'Bandingkan tetangga, pilih langkah yang lebih tinggi, dan temukan batas dari puncak terdekat.'}</p></section>`;
 }
 export function footerHtml(){return `<footer class="site-footer"><a href="https://github.com/wheresryan22/anatomy" target="_blank" rel="noreferrer">Built with Anatomy ↗</a></footer>`;}
