@@ -10,8 +10,13 @@ const cabinRing=roundedPlan({x:-3.2,y:-1.9,w:5.8,d:3.8,r:.6},2);
 const shadowRing=roundedPlan({x:-5.1,y:-2,w:11.4,d:5.3,r:1.4},2);
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 const path=points=>points.map(([x,y],i)=>(i?'L':'M')+x.toFixed(2)+' '+y.toFixed(2)).join('')+'Z';
-function drawCar(car,time){
+function drawCar(car,time,view){
   const state=sample(traffic.loops[car.data.loop],car.data.offset+time*car.data.speed);
+  car.depth=depthOf([state.x,state.y,0],P);
+  // Off-screen cars keep their last shape: no path rebuild, no reorder.
+  const [sx,sy]=iso([state.x,state.y,0],P);
+  car.visible=sx>view.x-30&&sx<view.x+view.width+30&&sy>view.y-30&&sy<view.y+view.height+30;
+  if(!car.visible)return;
   const c=Math.cos(state.angle),s=Math.sin(state.angle);
   const rotate=([x,y])=>[state.x+x*c-y*s,state.y+x*s+y*c];
   const projected=(points,z)=>points.map(p=>{const [x,y]=rotate(p);return iso([x,y,z],P);});
@@ -24,13 +29,17 @@ function drawCar(car,time){
     tail:path(projected([[-5.25,-2.1],[-4.8,-2.1],[-4.8,-1.2],[-5.25,-1.2]],2.48))+path(projected([[-5.25,1.2],[-4.8,1.2],[-4.8,2.1],[-5.25,2.1]],2.48))
   };
   for(const [key,d] of Object.entries(parts))car.paths[key].setAttribute('d',d);
-  car.depth=depthOf([state.x,state.y,0],P);
 }
+// Buildings, trees and props never move, so they stay in their built (depth-sorted) order.
+// Each frame only the visible cars are slotted in front of the first prop that lies nearer.
+const svgEl=scene.ownerSVGElement;
+function slot(depth){let lo=0,hi=props.length;while(lo<hi){const mid=(lo+hi)>>1;if(props[mid].depth<=depth)lo=mid+1;else hi=mid;}return lo<props.length?props[lo].node:null;}
 function render(time){
-  for(const car of cars)drawCar(car,time);
-  const sorted=[...props,...cars].sort((a,b)=>a.depth-b.depth);
-  let anchor=null;
-  for(let i=sorted.length-1;i>=0;i--){const node=sorted[i].node;if(node.nextSibling!==anchor)scene.insertBefore(node,anchor);anchor=node;}
+  const view=svgEl.viewBox.baseVal;
+  for(const car of cars)drawCar(car,time,view);
+  const moving=cars.filter(c=>c.visible).sort((a,b)=>b.depth-a.depth);
+  const placed=new Map();
+  for(const car of moving){const anchor=slot(car.depth),target=placed.has(anchor)?placed.get(anchor):anchor;if(car.node.nextSibling!==target)scene.insertBefore(car.node,target);placed.set(anchor,car.node);}
 }
 let clock=0,last=0,frame=0,visible=true;
 function tick(now){
