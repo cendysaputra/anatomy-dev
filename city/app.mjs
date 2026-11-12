@@ -35,7 +35,7 @@ function drawCar(car,time,view){
 const svgEl=scene.ownerSVGElement;
 function slot(depth){let lo=0,hi=props.length;while(lo<hi){const mid=(lo+hi)>>1;if(props[mid].depth<=depth)lo=mid+1;else hi=mid;}return lo<props.length?props[lo].node:null;}
 function render(time){
-  const view=svgEl.viewBox.baseVal;
+  const view=svgEl.cityView||svgEl.viewBox.baseVal;
   for(const car of cars)drawCar(car,time,view);
   const moving=cars.filter(c=>c.visible).sort((a,b)=>b.depth-a.depth);
   const placed=new Map();

@@ -1,11 +1,19 @@
 import {CityCamera} from './camera.mjs';
 // Fixed close-up camera: drag or use the arrow keys to move around the city. No zoom.
 export function setupCamera(stage){
-  const svg=stage.querySelector('svg'),world=svg.viewBox.baseVal;
+  const svg=stage.querySelector('svg'),vb=svg.viewBox.baseVal,world={width:vb.width,height:vb.height};
   const camera=new CityCamera(world.width,world.height);
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
   let displayed=camera.box,frame=0,animationStart=0,animationFrom=displayed;
-  const write=box=>{displayed=box;svg.setAttribute('viewBox',[box.x,box.y,box.width,box.height].join(' '));};
+  // The SVG keeps its full-world viewBox and is drawn once at the current scale; moving the camera
+  // only changes a GPU transform, so panning never re-rasterises the city.
+  let scale=0;
+  const write=box=>{
+    displayed=box;svg.cityView=box;
+    const next=stage.clientWidth/box.width;
+    if(Math.abs(next-scale)>1e-6){scale=next;svg.style.width=world.width*scale+'px';svg.style.height=world.height*scale+'px';}
+    svg.style.transform=`translate3d(${(-box.x*scale).toFixed(2)}px,${(-box.y*scale).toFixed(2)}px,0)`;
+  };
   function tween(now){
     frame=0;const target=camera.box,t=Math.min(1,(now-animationStart)/180),ease=1-Math.pow(1-t,3),next={};
     for(const key of ['x','y','width','height'])next[key]=animationFrom[key]+(target[key]-animationFrom[key])*ease;
