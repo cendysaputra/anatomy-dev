@@ -30,8 +30,8 @@ export function cityTraffic(){
   for(let row=0;row<BLOCKS;row++)for(let col=0;col<BLOCKS;col++){
     const loop=roundedLoop(GRID[col]+4.5,GRID[row]+4.5,GRID[col+1]-4.5,GRID[row+1]-4.5);
     const index=loops.push(loop)-1,speed=11+(index*7%6);
-    // A light sprinkling of traffic: one car on every third block loop.
-    if(index%3===0)cars.push({loop:index,speed,offset:loop.length*((index*.137)%1),color:index%5});
+    // Light traffic: one car on every other block loop.
+    if(index%2===0)cars.push({loop:index,speed,offset:loop.length*((index*.137)%1),color:index%5});
   }
   return {loops,cars};
 }
