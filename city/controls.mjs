@@ -1,6 +1,7 @@
 import {CityCamera} from './camera.mjs';
 // Fixed close-up camera: drag or use the arrow keys to move around the city. No zoom.
-export function setupCamera(stage){
+// onView(box,scale) runs synchronously with every camera move, so overlays stay locked to the map.
+export function setupCamera(stage,onView){
   const svg=stage.querySelector('svg'),vb=svg.viewBox.baseVal,world={width:vb.width,height:vb.height};
   const camera=new CityCamera(world.width,world.height);
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
@@ -13,6 +14,7 @@ export function setupCamera(stage){
     const next=stage.clientWidth/box.width;
     if(Math.abs(next-scale)>1e-6){scale=next;svg.style.width=world.width*scale+'px';svg.style.height=world.height*scale+'px';}
     svg.style.transform=`translate3d(${(-box.x*scale).toFixed(2)}px,${(-box.y*scale).toFixed(2)}px,0)`;
+    onView?.(box,scale);
   };
   function tween(now){
     frame=0;const target=camera.box,t=Math.min(1,(now-animationStart)/180),ease=1-Math.pow(1-t,3),next={};

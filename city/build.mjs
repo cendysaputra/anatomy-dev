@@ -104,10 +104,25 @@ for(let row=0;row<BLOCKS;row++)for(let col=0;col<BLOCKS;col++){
 for(const p of GRID.slice(0,-1).map(g=>g+38)){tree(-HALF+6,p,.8);tree(HALF-6,p,.8);tree(p,-HALF+6,.8);tree(p,HALF-6,.8);}
 objects.sort((a,b)=>a.depth-b.depth);
 const traffic=cityTraffic();
-const carMarkup=traffic.cars.map((c,i)=>`<g class="city-car car-${c.color}" data-car="${i}" aria-hidden="true"><path data-car-part="shadow"/><path data-car-part="side"/><path data-car-part="top"/><path data-car-part="edge"/><path data-car-part="cabin-side"/><path data-car-part="cabin-top"/><path data-car-part="glass"/><path data-car-part="lights"/><path data-car-part="tail"/></g>`).join('');
-const fig=k.figureSvg({width:W,height:H,label:`Miniatur kota isometrik berisi ${buildings} gedung, taman, jalan dua arah, dan ${traffic.cars.length} mobil yang bergerak otomatis dalam lintasan looping.`,body:[...ground,`<g id="city-scene">${objects.map((o,i)=>`<g data-city-object="${i}" data-depth="${o.depth.toFixed(6)}" data-kind="${o.kind}">${o.body}</g>`).join('')}${carMarkup}</g>`]});
+const fig=k.figureSvg({width:W,height:H,label:`Miniatur kota isometrik berisi ${buildings} gedung, taman, jalan dua arah, dan ${traffic.cars.length} mobil yang bergerak otomatis dalam lintasan looping.`,body:[...ground,`<g id="city-scene">${objects.map((o,i)=>`<g data-city-object="${i}" data-depth="${o.depth.toFixed(6)}" data-kind="${o.kind}">${o.body}</g>`).join('')}</g>`]});
 const body=`<style>${chromeCss()}</style><link rel="stylesheet" href="/city/style.css">${chromeHtml({active:'city'})}<figure class="city-figure"><div class="city-stage" tabindex="0" role="region" aria-label="Peta kota: seret atau pakai tombol panah untuk bergeser">${fig}</div></figure><script id="city-config" type="application/json">${JSON.stringify({projection:P,buildings,cars:traffic.cars.length})}</script>${footerHtml()}`;
 let html=k.pageHtml({title:'City',theme:'light',width:1280,body});
 html=html.replace('<html lang="en">','<html lang="id">').replace('</head>','<meta name="description" content="Miniatur kota dengan sudut isometrik Anatomy, dengan puluhan gedung dan mobil yang bergerak looping otomatis."></head>').replace('</body>','<script type="module" src="/city/app.mjs"></script></body>');
+// Path data is rewritten with relative segments: identical geometry at one-decimal precision,
+// about a quarter fewer bytes of HTML to download and parse. Paths with finer numbers are left alone.
+const num=v=>String(Math.round(v*10)/10).replace(/^(-?)0\./,'$1.');
+function compact(d){
+  if(/[^MLZ\d. -]/.test(d)||/\.\d\d/.test(d))return d;
+  let out='',px=0,py=0,sx=0,sy=0;
+  for(const [,op,a,b] of d.matchAll(/([MLZ])(-?[\d.]+)?(?: (-?[\d.]+))?/g)){
+    if(op==='Z'){out+='z';px=sx;py=sy;continue;}
+    const x=+a,y=+b;
+    if(op==='M'){out+='M'+a+' '+b;sx=x;sy=y;}
+    else{const dx=num(x-px),dy=num(y-py);out+='l'+dx+(dy[0]==='-'?'':' ')+dy;}
+    px=x;py=y;
+  }
+  return out;
+}
+html=html.replace(/ d="([^"]*)"/g,(match,d)=>' d="'+compact(d)+'"');
 writeFileSync(new URL('index.html',import.meta.url),html);
 console.log(`Built city · ${buildings} buildings · ${traffic.cars.length} cars · ${trees} trees`);

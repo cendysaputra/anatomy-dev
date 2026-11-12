@@ -36,7 +36,7 @@ Reference: [Cloudflare CDN overview](https://www.cloudflare.com/learning/cdn/wha
 
 ### City
 
-An Anatomy miniature city viewed at the same 30-degree isometric elevation as the other Anatomy illustrations, with inherited neutral tones: 56 varied buildings, two parks, a two-way street grid and 32 cars. The view opens at 220% zoom; use wheel/pinch or the zoom buttons to move closer/further, drag to pan, or fit the entire city. Keyboard: +/−, arrows, and 0/Home. Animation starts automatically with no playback buttons. Cars follow tangent-continuous rounded loops around the city blocks; the scene sorts moving cars with buildings so occlusion remains correct. The animation pauses off-screen and respects the device’s reduced-motion setting. This is a visual city scene, not a traffic simulation.
+An Anatomy miniature city viewed at the same 30-degree isometric elevation as the other Anatomy illustrations, with inherited neutral tones: 56 varied buildings, two parks, a two-way street grid and 32 cars. The view opens at 220% zoom; use wheel/pinch or the zoom buttons to move closer/further, drag to pan, or fit the entire city. Keyboard: +/−, arrows, and 0/Home. Animation starts automatically with no playback buttons. Cars follow tangent-continuous rounded loops around the city blocks. They are drawn on a canvas above the static SVG map, and each car is cut away behind every nearer building, so occlusion remains correct while the map itself is rasterised only once. Cars and snow share one animation loop capped at 60 frames per second. The animation pauses off-screen and respects the device’s reduced-motion setting. This is a visual city scene, not a traffic simulation.
 
 ## Development
 
