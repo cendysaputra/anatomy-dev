@@ -205,7 +205,7 @@ function draw(){
 }
 // Called by the camera on every move and resize, in the same task that moves the map.
 function onView(box,nextScale){
-  view=box;scale=nextScale;dpr=Math.min(3,devicePixelRatio||1);
+  view=box;scale=nextScale;dpr=Math.min(1.5,devicePixelRatio||1);
   const w=Math.round(stage.clientWidth*dpr),h=Math.round(stage.clientHeight*dpr);
   if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
   draw();
