@@ -45,3 +45,22 @@ test('crowded label anchors keep readable spacing within the stage',()=>{
   for(let i=1;i<arranged.length;i++)assert.ok(arranged[i].y-arranged[i-1].y>=30);
  }
 });
+
+import {typingOrder,canType,keyTravel} from './typing.mjs';
+test('idle typing covers all 104 rendered keys once per cycle',()=>{
+ assert.equal(typingOrder.length,keys.length);
+ assert.equal(new Set(typingOrder).size,keys.length);
+ const html=readFileSync(new URL('./index.html',import.meta.url),'utf8');
+ const rendered=[...html.matchAll(/data-key="(\d+)"/g)].map(m=>Number(m[1]));
+ assert.deepEqual(rendered.sort((a,b)=>a-b),[...typingOrder].sort((a,b)=>a-b));
+});
+test('typing runs only while fully assembled, visible and motion is allowed',()=>{
+ const closed={target:0,current:0,reduced:false,hidden:false};
+ assert.equal(canType(closed),true);
+ for(const change of [{target:.01},{current:.01},{reduced:true},{hidden:true}])assert.equal(canType({...closed,...change}),false);
+});
+
+test('key press travels down and returns fully without overshooting',()=>{
+ assert.equal(keyTravel(0),0);assert.equal(keyTravel(90),1);assert.equal(keyTravel(270),0);
+ for(let t=0;t<=300;t+=5)assert.ok(keyTravel(t)>=0&&keyTravel(t)<=1);
+});

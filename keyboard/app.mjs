@@ -1,6 +1,7 @@
-import {iso,translateAlong} from '../kit/iso-kit.mjs';
+import {iso,axisVector,translateAlong} from '../kit/iso-kit.mjs';
 import {displacement} from './motion.mjs';
 import {labels,labelOpacity,arrangeLabels} from './labels.mjs';
+import {createTyping,canType} from './typing.mjs';
 const section=document.querySelector('.keyboard-scroll');
 const stage=document.querySelector('.keyboard-stage');
 const header=document.querySelector('.site-header');
@@ -37,16 +38,24 @@ function drawLabels(){
   }
  }
 }
+const keyNodes=new Map([...svg.querySelectorAll('[data-key]')].map(el=>[Number(el.dataset.key),el]));
+const [pressX,pressY]=axisVector(projection,[0,0,-2.2]);
+const typing=createTyping(keyNodes,[pressX,pressY],running=>{section.dataset.typing=String(running)});
 let target=0,current=0,frame=0,start=0,distance=1;
+function syncTyping(){
+ if(canType({target,current,reduced:reduced.matches,hidden:document.hidden}))typing.start();
+ else typing.stop();
+}
 function draw(){
  current=reduced.matches?target:current+(target-current)*.14;
  if(Math.abs(target-current)<.0001)current=target;
  for(const el of groups)el.setAttribute('transform',translateAlong(projection,displacement(el.dataset.layer,current)));
  section.dataset.progress=current.toFixed(4);
  drawLabels();
+ syncTyping();
  frame=current===target?0:requestAnimationFrame(draw);
 }
-function update(){target=Math.max(0,Math.min(1,(scrollY-start)/distance));if(!frame)frame=requestAnimationFrame(draw)}
+function update(){target=Math.max(0,Math.min(1,(scrollY-start)/distance));syncTyping();if(!frame)frame=requestAnimationFrame(draw)}
 function measure(){
  const mobile=matchMedia('(max-width:900px)').matches;
  const top=mobile?header.getBoundingClientRect().height+24:16;
@@ -57,6 +66,7 @@ function measure(){
  update();
 }
 addEventListener('scroll',update,{passive:true});
+document.addEventListener('visibilitychange',syncTyping);
 addEventListener('resize',measure);
 reduced.addEventListener('change',update);
 new ResizeObserver(measure).observe(header);
