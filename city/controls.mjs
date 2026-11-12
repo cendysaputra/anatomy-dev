@@ -23,6 +23,9 @@ export function setupCamera(stage){
     if(smooth&&!reduced.matches){animationStart=performance.now();animationFrom=displayed;if(!frame)frame=requestAnimationFrame(tween);}
     else{cancelAnimationFrame(frame);frame=0;write(camera.box);}
   }
+  // Keep the view over the city: the world box has empty corners around the isometric diamond,
+  // so panning is limited to a band around the centre where the city fills the screen.
+  const pan=(dx,dy)=>{camera.pan(dx,dy);const s=camera.size,cx=(world.width-s.width)/2,cy=(world.height-s.height)/2,mx=Math.max(0,world.width*.5-s.width*.5-world.width*.2),my=Math.max(0,world.height*.5-s.height*.5-world.height*.2);camera.x=Math.min(cx+mx,Math.max(cx-mx,camera.x));camera.y=Math.min(cy+my,Math.max(cy-my,camera.y));};
   const toWorld=(x,y)=>new DOMPoint(x,y).matrixTransform(svg.getScreenCTM().inverse());
   let drag=null;
   stage.addEventListener('pointerdown',event=>{
@@ -33,7 +36,7 @@ export function setupCamera(stage){
   });
   stage.addEventListener('pointermove',event=>{
     if(!drag||event.pointerId!==drag.id)return;event.preventDefault();
-    const current=toWorld(event.clientX,event.clientY);camera.pan(drag.world.x-current.x,drag.world.y-current.y);apply();
+    const current=toWorld(event.clientX,event.clientY);pan(drag.world.x-current.x,drag.world.y-current.y);apply();
   });
   function end(event){
     if(!drag||event.pointerId!==drag.id)return;drag=null;
@@ -44,7 +47,7 @@ export function setupCamera(stage){
   stage.addEventListener('keydown',event=>{
     const step=displayed.width*.08;
     if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key))return;
-    camera.pan(event.key==='ArrowLeft'?-step:event.key==='ArrowRight'?step:0,event.key==='ArrowUp'?-step:event.key==='ArrowDown'?step:0);apply(true);
+    pan(event.key==='ArrowLeft'?-step:event.key==='ArrowRight'?step:0,event.key==='ArrowUp'?-step:event.key==='ArrowDown'?step:0);apply(true);
     event.preventDefault();
   });
   // Zoom is fixed per screen shape: the base close-up, or closer on tall screens so the map

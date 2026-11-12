@@ -22,3 +22,4 @@ body:has(.city-stage) .iso-page{min-height:0;padding-bottom:0}
 .city-stage{--anatomy-mid:#8b8b8b;--anatomy-hi:#444;--anatomy-lo:#b9b9b9;--anatomy-faint:#e8e8e8;--anatomy-text:#575757;--anatomy-halo:#888;--anatomy-shade-0:#dcdcdc;--anatomy-shade-1:#e5e5e5;--anatomy-shade-2:#ededed;--anatomy-shade-3:#f4f4f4;--anatomy-lit-shade:#eee}
 /* The camera moves the drawn city with a transform (see controls.mjs). */
 .city-stage .iso-svg{position:absolute;top:0;left:0;width:auto;height:auto;max-width:none;transform-origin:0 0;will-change:transform}
+body:has(.city-stage) .site-header{user-select:none}
